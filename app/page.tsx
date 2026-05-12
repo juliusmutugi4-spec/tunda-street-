@@ -1,12 +1,16 @@
 "use client"
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Plus, X, Upload, Search, MapPin, ArrowLeft, Phone, Wallet, Grid3X3, Megaphone,ShoppingBag,  User, Heart, Eye, EyeOff, Trash2, ArrowDownToLine, ArrowUpFromLine, Send,Shield } from "lucide-react"
+import { Loader2, Menu, Plus, X, Upload, Search, MapPin, ArrowLeft, Phone,MessageCircle, Calendar, Wallet, Grid3X3, Megaphone,ShoppingBag,  User, Heart, Eye, EyeOff, Trash2, ArrowDownToLine, ArrowUpFromLine, Send,Shield } from "lucide-react"
 import SimilarItems from '@/app/components/SimilarItems'
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 type Product = {
   id: number
@@ -20,6 +24,7 @@ type Product = {
   youtube_url?: string
   created_at: string
   user_id?: string
+  seller_phone?: string
   views: number
    digital_type?: string  
   download_url?: string 
@@ -130,33 +135,39 @@ function TimerPopup({
 }) {
   const [rides, setRides] = useState<any[]>([]);
 
-  useEffect(() => {
-    async function loadRides() {
-      const { data } = await supabase
-       .from('streetpay_rides')
-       .select('*')
-       .eq('status', 'requesting');
-      setRides(data || []);
-    }
-    loadRides();
+useEffect(() => {
+  async function loadRides() {
+    const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+    const { data } = await supabase
+      .from('streetpay_rides')
+      .select('*')
+      .eq('status', 'requesting')
+      .gte('created_at', twoMinsAgo) // only rides from last 2 mins
+    setRides(data || []);
+  }
+  
+  loadRides();
 
-    const channel = supabase
-     .channel('new-rides')
-     .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'streetpay_rides', 
-        filter: 'status=eq.requesting' 
-      }, (payload) => {
-        setRides(currentRides => [payload.new as any,...currentRides]);
-      })
-     .subscribe();
+  const channel = supabase
+    .channel('new-rides')
+    .on('postgres_changes', { 
+      event: 'INSERT', 
+      schema: 'public', 
+      table: 'streetpay_rides', 
+      filter: 'status=eq.requesting' 
+    }, (payload) => {
+      const createdAt = new Date(payload.new.created_at).getTime()
+      const diffMinutes = (Date.now() - createdAt) / 1000 / 60
+      if (diffMinutes < 2) { // only show if fresh
+        setRides(currentRides => [payload.new as any, ...currentRides]);
+      }
+    })
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
   return (
     <div className="px-1 py-1">
       <div className="text-[10px] font-bold text-gray-500 mb-1">Requests ({rides.length})</div>
@@ -191,12 +202,15 @@ function TimerPopup({
   )
 }
 export default function StreetMarket() {
+  const [viewImage, setViewImage] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState(null)
+const [showModal, setShowModal] = useState(false)
   const [bellCount, setBellCount] = useState(0);
-const [showBoxes, setShowBoxes] = useState(false);
+  const [showBoxes, setShowBoxes] = useState(false);
   const [rides, setRides] = useState<any[]>([]);
- const [pickup, setPickup] = useState(''); 
-const [dropoff, setDropoff] = useState('');
-   const [isDriverOnline, setIsDriverOnline] = useState(false);
+  const [pickup, setPickup] = useState('');
+  const [dropoff, setDropoff] = useState('');
+  const [isDriverOnline, setIsDriverOnline] = useState(false);
   const [activeRide, setActiveRide] = useState<any>(null);
   const [toasts, setToasts] = useState<{id: number, message: string}[]>([]);
   const [products, setProducts] = useState<Product[]>([])
@@ -204,12 +218,10 @@ const [dropoff, setDropoff] = useState('');
   const [showPostModal, setShowPostModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
- 
-    const [receiverTag, setReceiverTag] = useState('')
+  const [receiverTag, setReceiverTag] = useState('')
   const [sendAmount, setSendAmount] = useState('')
-const [sendPhone, setSendPhone] = useState('');
-
-const [activeTab, setActiveTab] = useState<'wallet' | 'categories' | 'broadcast' | 'profile' | 'orders'>('wallet')
+  const [sendPhone, setSendPhone] = useState('');
+  const [activeTab, setActiveTab] = useState<'wallet' | 'categories' | 'broadcast' | 'profile' | 'orders'>('wallet')
   const [loading, setLoading] = useState(false)
   const [activeCategory, setActiveCategory] = useState('')
   const [activeLocation, setActiveLocation] = useState('')
@@ -219,34 +231,46 @@ const [activeTab, setActiveTab] = useState<'wallet' | 'categories' | 'broadcast'
   const [wallet, setWallet] = useState<WalletType>({ balance: 0, escrow_balance: 0, phone: null })
   const [orders, setOrders] = useState<Order[]>([])
   const [showDepositModal, setShowDepositModal] = useState(false)
-const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-const [showSendModal, setShowSendModal] = useState(false)
-const [depositAmount, setDepositAmount] = useState('')
-const [depositPhone, setDepositPhone] = useState('')
-const [withdrawAmount, setWithdrawAmount] = useState('')
-const [withdrawPhone, setWithdrawPhone] = useState('')
-const [otpCode, setOtpCode] = useState('')
-const [awaitingOtp, setAwaitingOtp] = useState(false)
-const [currentOrderId, setCurrentOrderId] = useState<string | null>(null)
-const [hasPaidForThisItem, setHasPaidForThisItem] = useState(false)
-const [showBalance, setShowBalance] = useState(true)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showSendModal, setShowSendModal] = useState(false)
+  const [depositAmount, setDepositAmount] = useState('')
+  const [depositPhone, setDepositPhone] = useState('')
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawPhone, setWithdrawPhone] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [awaitingOtp, setAwaitingOtp] = useState(false)
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null)
+  const [hasPaidForThisItem, setHasPaidForThisItem] = useState(false)
+  const [showBalance, setShowBalance] = useState(true)
   const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(true)
-
-const [drawerOpen, setDrawerOpen] = useState(false)
-const [touchStartX, setTouchStartX] = useState(0)
-const [currentX, setCurrentX] = useState(0)
-const [isDragging, setIsDragging] = useState(false)
-  const [newItem, setNewItem] = useState({
-    title: '', price: '', phone: '', description: '',
-    category: '', location: 'Nairobi', digital_type: '', // ADD THIS
-    download_url: ''
+  const [authError, setAuthError] = useState('')
+  const [authSuccess, setAuthSuccess] = useState('')
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [touchStartX, setTouchStartX] = useState(0)
+  const [currentX, setCurrentX] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [newItem, setNewItem] = useState({ 
+  
+    title: '', 
+    price: '', 
+    phone: '', 
+    description: '', 
+    category: '', 
+    location: 'Nairobi', 
+    digital_type: '',
+    download_url: '' 
   })
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [, forceUpdate] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+useEffect(() => {
+  const timer = setInterval(() => forceUpdate(n => n + 1), 1000)
+  return () => clearInterval(timer)
+}, [])
+
 
 function showToast(message: string) {
   const id = Date.now();
@@ -257,7 +281,7 @@ function showToast(message: string) {
 }
 
   useEffect(() => {
-    checkUser()
+    
     fetchProducts()
   }, [])
 
@@ -539,19 +563,34 @@ const toggleDriverOnline = async () => {
       .eq('driver_id', user.id)
   }
 }
+// Auto-expire rides after 2 minutes
+useEffect(() => {
+  const interval = setInterval(() => {
+    const now = Date.now()
+    setRides(currentRides => 
+      currentRides.filter(ride => {
+        const createdAt = new Date(ride.created_at).getTime()
+        const diffMinutes = (now - createdAt) / 1000 / 60
+        return diffMinutes < 2 // keep only rides < 2 min old
+      })
+    )
+  }, 5000) // check every 5 seconds
 
+  return () => clearInterval(interval)
+}, [])
 
 const getYouTubeId = (url: string) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
   const match = url.match(regExp)
   return (match && match[2].length === 11)? match[2] : ''
 }
-  useEffect(() => {
-    filterProducts()
-  }, [products, activeCategory, activeLocation, searchTerm, activeTab, favorites])
 
 useEffect(() => {
-  if (wallet.phone && !depositPhone) {
+  filterProducts()
+}, [products, activeCategory, activeLocation, searchTerm, activeTab, favorites])
+
+useEffect(() => {
+  if (wallet.phone &&!depositPhone) {
     setDepositPhone(wallet.phone)
   }
 }, [wallet.phone])
@@ -576,10 +615,27 @@ const handleTouchEnd = () => {
   setCurrentX(0)
 }
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
-  }
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchWallet()
+      }
+    }
+  )
+
+  // Check current session on first load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(session?.user ?? null)
+    if (session?.user) {
+      fetchWallet()
+    }
+  })
+
+  return () => subscription.unsubscribe()
+}, [])
+
 const fetchWallet = async () => {
   if (!user) return
   const { data } = await supabase
@@ -589,141 +645,148 @@ const fetchWallet = async () => {
    .single()
   if (data) setWallet(data)
 }
-  const fetchProducts = async () => {
-    const { data } = await supabase
+
+const fetchProducts = async () => {
+  const { data } = await supabase
    .from('products')
    .select('*')
    .order('created_at', { ascending: false })
-    if (data) setProducts(data)
-  }
+  if (data) setProducts(data)
+}
 
-  const fetchFavorites = async () => {
-    if (!user) return
-    const { data } = await supabase
+const fetchFavorites = async () => {
+  if (!user) return
+  const { data } = await supabase
    .from('favorites')
    .select('product_id')
    .eq('user_id', user.id)
-    if (data) setFavorites(data.map(f => f.product_id))
-  }
+  if (data) setFavorites(data.map(f => f.product_id))
+}
+
 const fetchOrders = async () => {
   if (!user) return
   const { data, error } = await supabase
    .from('orders')
-   .select(`
-     *,
-     products(title, image_url)
-   `)
+   .select(`*, products(title, image_url)`)
    .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
    .order('created_at', { ascending: false })
-
   if (!error && data) setOrders(data)
 }
 
-  const filterProducts = () => {
-    let filtered = products
-
-    if (activeTab === 'profile' && user) {
-      filtered = filtered.filter(p => p.user_id === user.id)
-    } else {
-      if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory)
-      if (activeLocation) filtered = filtered.filter(p => p.location === activeLocation)
-      if (searchTerm) {
-        filtered = filtered.filter(p =>
-          p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      }
+const filterProducts = () => {
+  let filtered = products
+  if (activeTab === 'profile' && user) {
+    filtered = filtered.filter(p => p.user_id === user.id)
+  } else {
+    if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory)
+    if (activeLocation) filtered = filtered.filter(p => p.location === activeLocation)
+    if (searchTerm) {
+      filtered = filtered.filter(p =>
+        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
-    setFilteredProducts(filtered)
   }
+  setFilteredProducts(filtered)
+}
 
 const handleEmailAuth = async () => {
   setLoading(true)
+  setAuthError('')
+  setAuthSuccess('')
+
   try {
     if (!awaitingOtp) {
-      // Step 1: Send the code
+      // STEP 1: SEND EMAIL
       const { error } = await supabase.auth.signInWithOtp({
         email: authEmail,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: undefined // ← This line is the fix
-        }
+        options: { shouldCreateUser: true }
       })
       if (error) throw error
       setAwaitingOtp(true)
-      alert('Code sent! Check your email')
+      setAuthSuccess('Check your email for the code')
     } else {
-      // Step 2: Verify the code  
-      const { data, error } = await supabase.auth.verifyOtp({
+      // STEP 2: CHECK CODE  
+      const { error } = await supabase.auth.verifyOtp({
         email: authEmail,
         token: otpCode,
         type: 'email'
       })
       if (error) throw error
-      setUser(data.user)
       setShowAuthModal(false)
       setAwaitingOtp(false)
       setOtpCode('')
       setAuthEmail('')
+      
     }
-  } catch (error: any) {
-    alert(error.message)
+  } catch (e: any) {
+    setAuthError(e.message)
   } finally {
     setLoading(false)
   }
 }
 
+const closeAuthModal = () => {
+  setShowAuthModal(false)
+  setAwaitingOtp(false)
+  setOtpCode('')
+  setAuthEmail('')
+  setAuthError('')
+  setAuthSuccess('')
+}
 
 const handleSendMoney = async () => {
-  if (!user) return setShowAuthModal(true)
-  
+  if (!user) {
+    setShowAuthModal(true)
+    return
+  }
+
   const amount = parseInt(sendAmount)
-  
   if (!receiverTag.trim()) return alert("Enter receiver wallet tag")
   if (!receiverTag.startsWith('%!')) return alert("Tag must start with %!")
   if (!amount || amount <= 0) return alert("Enter valid amount")
   if (wallet.balance < amount) return alert("Insufficient balance")
-  
+
   setLoading(true)
-  
+
   const { data: receiver, error } = await supabase
-    .from('profiles')
-    .select('id, wallet_tag')
-    .eq('wallet_tag', receiverTag.trim())
-    .single()
-    
-  if (error || !receiver) {
+   .from('profiles')
+   .select('id, wallet_tag')
+   .eq('wallet_tag', receiverTag.trim())
+   .single()
+
+  if (error ||!receiver) {
     alert("Wallet tag not found")
     setLoading(false)
     return
   }
-  
+
   if (receiver.id === user.id) {
     alert("Can't send to yourself")
     setLoading(false)
     return
   }
-  
+
   const { data: receiverWallet } = await supabase
-    .from('wallets')
-    .select('balance')
-    .eq('user_id', receiver.id)
-    .single()
-    
+   .from('wallets')
+   .select('balance')
+   .eq('user_id', receiver.id)
+   .single()
+
   if (!receiverWallet) {
     alert("Receiver wallet not found")
     setLoading(false)
     return
   }
-  
+
   await supabase.from('wallets')
-    .update({ balance: wallet.balance - amount })
-    .eq('user_id', user.id)
-    
+   .update({ balance: wallet.balance - amount })
+   .eq('user_id', user.id)
+
   await supabase.from('wallets')
-    .update({ balance: receiverWallet.balance + amount })
-    .eq('user_id', receiver.id)
-  
+   .update({ balance: receiverWallet.balance + amount })
+   .eq('user_id', receiver.id)
+
   await supabase.from('transactions').insert({
     sender_id: user.id,
     receiver_id: receiver.id,
@@ -731,7 +794,7 @@ const handleSendMoney = async () => {
     type: 'send',
     status: 'completed'
   })
-  
+
   alert(`Sent KSh ${amount} to ${receiverTag}`)
   setSendAmount('')
   setReceiverTag('')
@@ -739,10 +802,14 @@ const handleSendMoney = async () => {
   setLoading(false)
   fetchWallet()
 }
-  
-  const handleCreateEscrowOrder = async () => {
-  if (!user) return setShowAuthModal(true)
-  if (!sendAmount || !selectedProduct) return
+
+const handleCreateEscrowOrder = async () => {
+  if (!user) {
+    setShowAuthModal(true)
+    return
+  }
+
+  if (!sendAmount ||!selectedProduct) return
   if (parseInt(sendAmount) > wallet.balance) return alert('Insufficient balance')
   if (!selectedProduct.user_id) return alert('Seller not found')
   if (user.id === selectedProduct.user_id) return alert('Cannot buy your own item')
@@ -751,12 +818,12 @@ const handleSendMoney = async () => {
   const amount = parseInt(sendAmount)
 
   const { error: walletError } = await supabase
-    .from('wallets')
-    .update({ 
+   .from('wallets')
+   .update({
       balance: wallet.balance - amount,
-      escrow_balance: wallet.escrow_balance + amount 
+      escrow_balance: wallet.escrow_balance + amount
     })
-    .eq('user_id', user.id)
+   .eq('user_id', user.id)
 
   if (walletError) {
     alert('Failed to lock funds: ' + walletError.message)
@@ -779,322 +846,133 @@ const handleSendMoney = async () => {
     fetchWallet()
   } else {
     alert('Order failed: ' + orderError.message)
-    await supabase.from('wallets').update({ 
+    await supabase.from('wallets').update({
       balance: wallet.balance,
-      escrow_balance: wallet.escrow_balance 
+      escrow_balance: wallet.escrow_balance
     }).eq('user_id', user.id)
   }
+
   setLoading(false)
 }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setFavorites([])
-    setActiveTab('wallet')
+const handleSignOut = async () => {
+  await supabase.auth.signOut()
+  setUser(null)
+  setFavorites([])
+  setActiveTab('wallet')
+}
+
+// DELETED THE FLOATING if (!user) BLOCK THAT CAUSED INFINITE LOOP
+
+const toggleFavorite = async (productId: number, e: React.MouseEvent) => {
+  e.stopPropagation()
+  if (!user) {
+    setShowAuthModal(true)
+    return
   }
 
-  const toggleFavorite = async (productId: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!user) return setShowAuthModal(true)
-
-    if (favorites.includes(productId)) {
-      await supabase.from('favorites').delete().eq('user_id', user.id).eq('product_id', productId)
-      setFavorites(favorites.filter(id => id!== productId))
-    } else {
-      await supabase.from('favorites').insert({ user_id: user.id, product_id: productId })
-      setFavorites([...favorites, productId])
-    }
-  }
-
-  const incrementViews = async (productId: number) => {
-    await supabase.rpc('increment_views', { row_id: productId })
-  }
-
-  const handleDelete = async (productId: number) => {
-    if (!confirm('Delete this listing?')) return
-    await supabase.from('products').delete().eq('id', productId)
-    setSelectedProduct(null)
-    fetchProducts()
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 14 * 1024 * 1024) return alert('Image too large. Max 14MB')
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
-    }
-  }
-
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
-    const { error } = await supabase.storage.from('uploads').upload(fileName, file)
-    if (error) return null
-    const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName)
-    return publicUrl
-  }
-
-  const handlePost = async () => {
-    if (!user) return setShowAuthModal(true)
-    if (!newItem.title ||!newItem.price ||!newItem.phone ||!newItem.category) return
-    setLoading(true)
-
-    let image_url = null
-    if (imageFile) {
-      image_url = await uploadImage(imageFile)
-      if (!image_url) {
-        alert('Image upload failed')
-        setLoading(false)
-        return
-      }
-    }
-
-    const { error } = await supabase.from('products').insert({
-      title: newItem.title,
-      price: parseInt(newItem.price),
-      phone: newItem.phone,
-      description: newItem.description,
-      category: newItem.category,
-      location: newItem.location,
-      image_url,
-      youtube_url: youtubeUrl,
+  if (favorites.includes(productId)) {
+    await supabase.from('favorites').delete()
+     .eq('user_id', user.id)
+     .eq('product_id', productId)
+    setFavorites(favorites.filter(id => id!== productId))
+  } else {
+    await supabase.from('favorites').insert({
       user_id: user.id,
-      digital_type: newItem.category === 'digital' ? newItem.digital_type : null,
-      download_url: newItem.category === 'digital' ? newItem.download_url : null
+      product_id: productId
     })
+    setFavorites([...favorites, productId])
+  }
+}
 
-    if (!error) {
-      setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '' })
-      setImageFile(null)
-      setImagePreview(null)
-      setYoutubeUrl('')
-      setShowPostModal(false)
-      fetchProducts()
-    } else {
-      alert('Post failed: ' + error.message)
+const incrementViews = async (productId: number) => {
+  await supabase.rpc('increment_views', { row_id: productId })
+}
+
+const handleDelete = async (productId: number) => {
+  if (!confirm('Delete this listing?')) return
+  await supabase.from('products').delete().eq('id', productId)
+  setSelectedProduct(null)
+  fetchProducts()
+}
+
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || [])
+  if (imageFiles.length + files.length > 10) {
+    alert('Max 10 images allowed')
+    return
+  }
+  for (const file of files) {
+    if (file.size > 14 * 1024) {
+      alert(`${file.name} is too large. Max 14MB`)
+      return
     }
-    setLoading(false)
+  }
+  setImageFiles(prev => [...prev,...files])
+  const newPreviews = files.map(file => URL.createObjectURL(file))
+  setImagePreviews(prev => [...prev,...newPreviews])
+}
+
+const removeImage = (index: number) => {
+  URL.revokeObjectURL(imagePreviews[index])
+  setImageFiles(prev => prev.filter((_, i) => i!== index))
+  setImagePreviews(prev => prev.filter((_, i) => i!== index))
+}
+
+const uploadImages = async (): Promise<string[]> => {
+  const urls: string[] = []
+  for (const file of imageFiles) {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random()}.${fileExt}`
+    const { error } = await supabase.storage.from('uploads').upload(fileName, file)
+    if (error) {
+      console.error('Upload error:', error)
+      continue
+    }
+    const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName)
+    urls.push(publicUrl)
+  }
+  return urls
+}
+
+const handlePost = async () => {
+  if (!user) {
+    setShowAuthModal(true)
+    return
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
+  setLoading(true)
+  let image_urls: string[] = []
+  if (imageFiles.length > 0) {
+    image_urls = await uploadImages()
   }
 
-  // DETAIL VIEW
-  if (selectedProduct) {
-    incrementViews(selectedProduct.id)
-    return (
-      <div 
-  className="min-h-screen bg-white font-sans"
- 
- 
->
-  {/* Left Swipe Drawer */}
-<div className={`fixed inset-y-0 left-0 z- w-64 bg-white shadow-2xl transform transition-transform duration-300 ${drawerOpen? 'translate-x-0' : '-translate-x-full'}`}>
-  <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-    <h2 className="font-bold text-lg text-gray-900">Menu</h2>
-    <button 
-      onClick={() => setDrawerOpen(false)} 
-      className="p-2 hover:bg-gray-100 rounded-lg"
-    >
-      <X className="w-5 h-5 text-gray-900" />
-    </button>
-  </div>
-  <div className="flex flex-col gap-1 p-4">
-    <button onClick={() => {setActiveTab('wallet'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'wallet'? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`} >
-      <Wallet className="w-5 h-5" /> Wallet 
-    </button>
-    <button onClick={() => {setActiveTab('categories'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'categories'? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`} >
-      <Grid3X3 className="w-5 h-5" /> Grid 
-    </button>
-    <button onClick={() => {setActiveTab('orders'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'orders'? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`} >
-      <ShoppingBag className="w-5 h-5" /> Orders 
-    </button>
-    <button onClick={() => {setActiveTab('profile'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'profile'? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`} >
-      <User className="w-5 h-5" /> Profile 
-    </button>
-    <button onClick={() => {setShowPostModal(true); setDrawerOpen(false)}} className="flex items-center gap-3 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 mt-4" >
-      <Plus className="w-5 h-5" /> Sell 
-    </button>
-  </div>
-</div>
-{/* Backdrop */}
-{drawerOpen && (
-  <div 
-    className="fixed inset-0 bg-black/40 z-" 
-    onClick={() => setDrawerOpen(false)} 
-  />
-)}
-        <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
-          <div className="sticky top-0 bg-white z-10 p-4 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setSelectedProduct(null)} className="p-2">
-                <ArrowLeft className="h-5 w-5 text-gray-900" />
-              </button>
-              <h1 className="text-lg font-bold text-gray-900">Item Details</h1>
-            </div>
-            <div onClick={(e) => toggleFavorite(selectedProduct.id, e)} className="p-2 cursor-pointer">
-              <Heart className={`h-6 w-6 ${favorites.includes(selectedProduct.id)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-            </div>
-          </div>
+  const { error } = await supabase.from('products').insert({
+    title: newItem.title,
+    price: parseInt(newItem.price),
+    phone: newItem.phone,
+    description: newItem.description,
+    category: newItem.category,
+    location: newItem.location,
+    images: image_urls,
+    youtube_url: youtubeUrl,
+    user_id: user.id,
+    digital_type: newItem.category === 'digital'? newItem.digital_type : null,
+    download_url: newItem.category === 'digital'? newItem.download_url : null
+  })
 
-          {selectedProduct.image_url? (
-            <img src={selectedProduct.image_url} alt={selectedProduct.title} className="w-full h-80 object-cover" />
-          ) : (
-            <div className="w-full h-80 bg-gray-100 flex items-center justify-center text-6xl">
-              {CATEGORIES.find(c => c.value === selectedProduct.category)?.emoji || '📦'}
-            </div>
-          )}
-{selectedProduct.youtube_url && selectedProduct.youtube_url.trim() !== '' && (
-  <div className="p-4 relative">
-    <div className="absolute top-6 left-6 bg-red-600 text-white text-xs px-2 py-1 rounded-full flex items-center z-10">
-      📹 Video
-    </div>
-    <iframe 
-      src={`https://www.youtube.com/embed/${getYouTubeId(selectedProduct.youtube_url)}`} 
-      className="w-full h-48 rounded-xl" 
-      allowFullScreen 
-    />
-  </div>
-)}
-          <div className="p-5">
-            <div className="flex items-center gap-2 text-gray-500 mb-2">
-              <Eye className="h-4 w-4" />
-              <span className="text-sm">{selectedProduct.views} views</span>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedProduct.title}</h2>
-            <p className="text-3xl font-bold text-green-600 mb-4">KSh {selectedProduct.price.toLocaleString()}</p>
-
-            <div className="flex items-center gap-2 text-gray-600 mb-4">
-              <MapPin className="h-4 w-4" />
-              <span className="text-sm">{selectedProduct.location}</span>
-              <span className="text-gray-300">•</span>
-              <span className="text-sm">Posted {formatDate(selectedProduct.created_at)}</span>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-1">Category</p>
-              <p className="text-gray-900">
-                {CATEGORIES.find(c => c.value === selectedProduct.category)?.emoji} {CATEGORIES.find(c => c.value === selectedProduct.category)?.name}
-              </p>
-            </div>
-
-            {selectedProduct.description && (
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-2">Description</p>
-                <p className="text-gray-900 whitespace-pre-wrap">{selectedProduct.description}</p>
-              </div>
-            )}
-
-            <div className="border-t border-gray-100 pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Seller Contact</p>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">+{selectedProduct.phone}</p>
-                  <p className="text-xs text-gray-500">Usually replies instantly</p>
-                </div>
-              </div>
-
-              <a
-                href={`https://wa.me/${selectedProduct.phone}?text=Niaje, niko interested na ${encodeURIComponent(selectedProduct.title)}`}
-                target="_blank"
-                className="w-full bg-green-500 text-white rounded-xl p-4 font-semibold flex items-center justify-center gap-2 mb-3"
-              >
-                <Phone className="h-5 w-5" />
-                Chat on WhatsApp
-              </a>
- {user && user.id !== selectedProduct.user_id && ( 
-  <>
-    {!hasPaidForThisItem ? (
-      <button 
-        onClick={async () => {
-          if (!user) return setShowAuthModal(true)
-          
-          const totalCost = selectedProduct.price + 10
-          
-          if (!wallet || wallet.balance < totalCost) {
-            return alert(`Insufficient balance. Please deposit KSh ${totalCost} first.`)
-          }
-          
-          setLoading(true)
-          const { data, error } = await supabase.rpc('buy_with_escrow', {
-            p_product_id: selectedProduct.id,
-            p_seller_id: selectedProduct.user_id,
-            p_amount: selectedProduct.price,
-            p_fee: 10
-          })
-          
-          if (error) {
-            alert('Error: ' + error.message)
-          } else {
-            setCurrentOrderId(data)
-            setHasPaidForThisItem(true)
-            alert(`Paid! KSh ${totalCost} held safely in escrow.`)
-            fetchWallet()
-            fetchOrders()
-          }
-          setLoading(false)
-        }}
-        disabled={loading}
-        style={{
-          width: '100%', backgroundColor: 'white', color: 'black',
-          border: '2px solid #000000', borderRadius: '12px', padding: '16px',
-          marginBottom: '12px', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '16px'
-        }}
-      >
-        <Shield style={{height: '20px', width: '20px'}} />
-        <span>Buy Safely - KSh {(selectedProduct.price + 10).toLocaleString()}</span>
-        <span style={{fontSize: '12px', opacity: 0.7}}>
-          KSh {selectedProduct.price.toLocaleString()} + KSh 10 protection
-        </span>
-      </button>
-    ) : (
-      <button 
-        onClick={() => handleRelease(currentOrderId!)}
-        disabled={loading || !currentOrderId}
-        style={{
-          width: '100%', backgroundColor: 'white', color: 'black',
-          border: '2px solid #16a34a', borderRadius: '12px', padding: '16px',
-          marginBottom: '12px', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '16px'
-        }}
-      >
-        <Shield style={{height: '20px', width: '20px', color: '#16a34a'}} />
-        <span>Release Payment to Seller</span>
-        <span style={{fontSize: '12px', opacity: 0.7}}>
-          Click after you receive the item
-        </span>
-      </button>
-    )}
-  </>
-
-
-       )} 
-                     <SimilarItems category={selectedProduct.category} currentId={selectedProduct.id} />
-       
-             {user?.id === selectedProduct.user_id && (
-                <button
-                  onClick={() => handleDelete(selectedProduct.id)}
-                  className="w-full bg-red-50 text-red-600 rounded-xl p-4 font-semibold flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="h-5 w-5" />
-                  Delete Listing
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  if (!error) {
+    setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '' })
+    setImageFiles([])
+    setImagePreviews([])
+    setYoutubeUrl('')
+    setShowPostModal(false)
+    fetchProducts()
+  } else {
+    alert('Post failed: ' + error.message)
   }
-
+  setLoading(false)
+}
 
   
   // MAIN VIEW
@@ -1704,9 +1582,15 @@ onClick={handleSend}
                       </p>
                     </div>
                     <div className="flex justify-between items-end mt-3">
-                      <span className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium">
-                        View
-                      </span>
+                     <button
+  onClick={(e) => {
+    e.stopPropagation()
+    setViewImage(product.image_url || '/placeholder.png')
+  }}
+  className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium cursor-pointer hover:bg-black active:scale-95"
+>
+  View
+</button>
                       {product.image_url? (
                         <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded-lg" />
                       ) : (
@@ -1817,64 +1701,85 @@ onClick={handleSend}
         
  {/* AUTH MODAL */}
 {showAuthModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
-    <div className="bg-white w-full max-w-sm rounded-3xl p-6">
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-lg font-bold text-gray-900">
-          {awaitingOtp ? 'Enter Code' : 'Sign In'}
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-sm p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-900">
+          {awaitingOtp ? 'Enter Code' : 'Sign in'}
         </h2>
-        <X onClick={() => {
-          setShowAuthModal(false)
-          setAwaitingOtp(false)
-          setOtpCode('')
-          setAuthEmail('')
-        }} className="cursor-pointer text-gray-500" />
+        <button onClick={closeAuthModal} className="p-1">
+          <X className="h-5 w-5 text-gray-500" />
+        </button>
       </div>
 
+      {authError && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm">
+          {authError}
+        </div>
+      )}
+
+      {authSuccess && (
+        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl mb-4 text-sm">
+          {authSuccess}
+        </div>
+      )}
+
       {!awaitingOtp ? (
-        <>
-          <p className="text-sm text-gray-600 mb-4">We'll email you a 6-digit code</p>
-          <input 
-            type="email" 
-            placeholder="your@email.com" 
-            value={authEmail} 
-            onChange={e => setAuthEmail(e.target.value)} 
-            className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4" 
-          />
-          <button 
-            onClick={handleEmailAuth} 
-            disabled={loading || !authEmail} 
-            className="bg-green-500 text-white rounded-xl p-4 w-full font-semibold disabled:opacity-50"
-          >
-            {loading ? 'Sending...' : 'Send Code'}
-          </button>
-        </>
+        <input
+          type="email"
+          placeholder="you@example.com"
+          value={authEmail}
+          onChange={(e) => setAuthEmail(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
+          disabled={loading}
+          onKeyDown={(e) => e.key === 'Enter' && handleEmailAuth()}
+          autoFocus
+        />
       ) : (
         <>
-          <p className="text-sm text-gray-600 mb-4">Code sent to {authEmail}</p>
-          <input 
-            type="text" 
-            placeholder="123456" 
-            value={otpCode} 
-            onChange={e => setOtpCode(e.target.value)} 
+          <p className="text-gray-600 text-sm mb-4">
+            Code sent to <span className="font-medium">{authEmail}</span>
+          </p>
+          <input
+            type="text"
+            placeholder="000000"
+            value={otpCode}
+            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-2 text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-green-500"
+            disabled={loading}
             maxLength={6}
-            className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4 text-center tracking-widest" 
+            onKeyDown={(e) => e.key === 'Enter' && handleEmailAuth()}
+            autoFocus
           />
-          <button 
-            onClick={handleEmailAuth} 
-            disabled={loading || otpCode.length !== 6} 
-            className="bg-green-500 text-white rounded-xl p-4 w-full font-semibold disabled:opacity-50"
-          >
-            {loading ? 'Verifying...' : 'Verify & Login'}
-          </button>
-          <button 
-            onClick={() => {setAwaitingOtp(false); setOtpCode('')}} 
-            className="w-full text-center text-sm text-gray-600 mt-4"
+          <button
+            onClick={() => {
+              setAwaitingOtp(false)
+              setOtpCode('')
+              setAuthError('')
+              setAuthSuccess('')
+            }}
+            className="text-sm text-green-600 mb-4 hover:underline"
+            disabled={loading}
           >
             Use different email
           </button>
         </>
       )}
+
+      <button
+        onClick={handleEmailAuth}
+        disabled={loading}
+        className="w-full bg-green-600 text-white rounded-xl py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {awaitingOtp ? 'Verifying...' : 'Sending...'}
+          </>
+        ) : (
+          awaitingOtp ? 'Verify Code' : 'Continue'
+        )}
+      </button>
     </div>
   </div>
 )}
@@ -1947,19 +1852,58 @@ tsx
   />
 </div>
 
-<input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <select
-                  value={newItem.location}
-                  onChange={e => setNewItem({...newItem, location: e.target.value})}
-                  className="w-full bg-gray-100 border border-gray-300 rounded-xl p-3 text-sm text-gray-900"
-                >
-                  {LOCATIONS.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
-              </div>
+<input
+  type="file"
+  ref={fileInputRef}
+  onChange={handleImageChange}
+  accept="image/*"
+  multiple
+  className="hidden"
+  id="imageUpload"
+  name="images"
+/>
+
+{imagePreviews.length > 0 && (
+  <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
+    {imagePreviews.map((preview, index) => (
+      <div key={index} className="relative">
+        <img
+          src={preview}
+          alt={`Preview ${index + 1}`}
+          className="w-full h-24 object-cover rounded"
+        />
+        
+        <button
+          type="button"
+          onClick={() => setViewImage(preview)}
+          className="absolute bottom-1 left-1 bg-black/60 text-white px-2 py-0.5 text-xs rounded z-10"
+        >
+          View
+        </button>
+
+        <button
+          type="button"
+          onClick={() => removeImage(index)}
+          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+        >
+          ×
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+<div className="mb-3">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+  <select 
+    value={newItem.location} 
+    onChange={e => setNewItem({...newItem, location: e.target.value})} 
+    className="w-full bg-gray-100 border border-gray-300 rounded-xl p-3 text-sm text-gray-900"
+  >
+    {LOCATIONS.map(loc => (
+      <option key={loc} value={loc}>{loc}</option>
+    ))}
+  </select>
+</div>
 
               <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
@@ -2007,9 +1951,9 @@ tsx
                 onClick={() => fileInputRef.current?.click()}
                 className="border border-gray-300 rounded-xl p-3 mb-3 w-full text-sm text-gray-700 flex items-center justify-center gap-2 bg-white"
               >
-                <Upload className="h-4 w-4" /> {imageFile? 'Change Image' : 'Upload Image'}
+                <Upload className="h-4 w-4" /> {imageFiles.length > 0 ? 'Change Images' : 'Upload Images'}
               </button>
-              {imagePreview && <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-xl mb-3" />}
+              
 
               <button
                 onClick={handlePost}
@@ -2021,97 +1965,30 @@ tsx
             </div>
           </div>
         )}
-{/* DRIVER TABS */}
-<div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-  <button 
-    onClick={() => setActiveTab('orders')}
-    style={{
-      flex: 1,
-      padding: '6px',
-      fontSize: '12px',
-      background: activeTab === 'orders' ? '#29AB87' : '#eee',
-      color: activeTab === 'orders' ? '#fff' : '#000',
-      border: 'none',
-      borderRadius: '4px'
-    }}
-  >
-    Orders
-  </button>
-  <button 
-    onClick={() => setActiveTab('wallet')}
-    style={{
-      flex: 1,
-      padding: '6px',
-      fontSize: '12px',
-      background: activeTab === 'wallet' ? '#29AB87' : '#eee',
-      color: activeTab === 'wallet' ? '#fff' : '#000',
-      border: 'none',
-      borderRadius: '4px'
-    }}
-  >
-    Wallet
-  </button>
-  <button 
-    onClick={() => setActiveTab('profile')}
-    style={{
-      flex: 1,
-      padding: '6px',
-      fontSize: '12px',
-      background: activeTab === 'profile' ? '#29AB87' : '#eee',
-      color: activeTab === 'profile' ? '#fff' : '#000',
-      border: 'none',
-      borderRadius: '4px'
-    }}
-  >
-    Profile
-  </button>
-</div>
 
-{/* ORDERS TAB - INCOMING REQUESTS ONLY */}
+{/* MAIN CONTENT AREA */}
+<div className="px-4 mt-4 pb-24">  {/* pb-24 = space for bubbles */}
+  
+{/* ONLY SHOW IN ORDERS TAB */}
 {activeTab === 'orders' && (
   <div>
     <h2 style={{ color: '#29AB87', fontSize: '14px', margin: '8px 0' }}>
       Incoming Requests ({rides.length})
     </h2>
-    
     {rides.length === 0 ? (
       <p style={{ fontSize: '12px', color: '#999', textAlign: 'center', padding: '8px' }}>
         No ride requests yet
       </p>
     ) : (
       rides.map(ride => (
-        <div key={ride.id} style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '3px 8px',
-          margin: '1px 0',
-          height: '28px',
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: '4px',
-          fontSize: '11px'
-        }}>
+        <div key={ride.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 8px', margin: '1px 0', height: '28px', background: '#fff', border: '1px solid #eee', borderRadius: '4px', fontSize: '11px' }}>
           <span style={{ color: '#000', fontWeight: 600 }}>
             {ride.area_name || ride.pickup_location || '?'} → {ride.destination || ride.dropoff_location || '?'} Ksh{ride.estimated_fare || ride.fare_estimate || 0}
           </span>
-          
-          <button
-            onClick={async () => {
-              await supabase.from('streetpay_rides').update({ status: 'accepted' }).eq('id', ride.id);
-              setRides(rides.filter(r => r.id !== ride.id));
-            }}
-            style={{
-              background: '#ec4899',
-              color: '#fff',
-              fontSize: '10px',
-              padding: '2px 8px',
-              border: 'none',
-              borderRadius: '3px',
-              height: '20px',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={async () => {
+            await supabase.from('streetpay_rides').update({ status: 'accepted' }).eq('id', ride.id);
+            setRides(rides.filter(r => r.id !== ride.id));
+          }} style={{ background: '#33f702', color: '#000', fontSize: '10px', padding: '2px 8px', border: 'none', borderRadius: '3px', height: '20px', cursor: 'pointer' }}>
             Accept Ride
           </button>
         </div>
@@ -2120,22 +1997,226 @@ tsx
   </div>
 )}
 
-{/* WALLET TAB */}
-{activeTab === 'wallet' && (
-  <div>
-    {/* Put your existing Wallet code here */}
-    <p style={{ fontSize: '12px' }}>Wallet content</p>
-  </div>
-)}
+</div> {/* This closes the main content div - fixes your error */}
 
-{/* PROFILE TAB */}
-{activeTab === 'profile' && (
-  <div>
-    {/* Put your existing Profile code here */}
-    <p style={{ fontSize: '12px' }}>Profile content</p>
+{/* BOTTOM BUBBLE NAV */}
+<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div className="flex gap-3 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-2xl border border-gray-100">
+    
+    <button
+      onClick={() => setActiveTab('wallet')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'wallet' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <Wallet className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setActiveTab('orders')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'orders' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <ShoppingBag className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setShowPostModal(true)}
+      className="p-3 rounded-full bg-gray-900 text-white hover:bg-black transition-all"
+    >
+      <Plus className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setActiveTab('profile')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'profile' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <User className="w-5 h-5" />
+    </button>
+
   </div>
-)}
+</div>
+{/* Floating Menu Button */}
+<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
+  <button onClick={() => setDrawerOpen(true)} className="bg-gray-900 text-white p-4 rounded-full shadow-lg">
+    <Menu className="w-6 h-6" />
+  </button>
+</div>
+      </div>
+            {viewImage && (
+      <div
+        onClick={() => setViewImage(null)}
+        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+      >
+        <div onClick={(e) => e.stopPropagation()} className="relative">
+          <img
+            src={viewImage!}
+            alt="Full view"
+            className="max-w-full max-h-screen object-contain rounded"
+          />
+          <button
+            onClick={() => setViewImage(null)}
+            className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    )}
+{/* PRODUCT DETAIL MODAL - FULL SCREEN */}
+{selectedProduct && (
+  <div className="fixed inset-0 bg-white z-[100] overflow-y-auto">
+    {/* Top bar */}
+    <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b z-10">
+      <div className="flex items-center justify-between p-4">
+        <button
+          onClick={() => setSelectedProduct(null)}
+          className="p-2 hover:bg-gray-100 rounded-full"
+        >
+          <X size={24} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleFavorite(selectedProduct.id, e)
+          }}
+          className="p-2 hover:bg-gray-100 rounded-full"
+        >
+          <Heart className={`h-6 w-6 ${favorites.includes(selectedProduct.id)? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+        </button>
       </div>
     </div>
+
+    {/* Image */}
+    {selectedProduct.image_url && (
+      <div className="w-full bg-gray-100">
+        <img
+          src={selectedProduct.image_url}
+          alt={selectedProduct.title}
+          className="w-full h- object-cover max-h-[50vh]"
+        />
+      </div>
+    )}
+
+    {/* Content */}
+    <div className="max-w-2xl mx-auto p-6 pb-32 space-y-6">
+      <div>
+        <h1 className="font-bold text-3xl text-gray-900 leading-tight">{selectedProduct.title}</h1>
+        <p className="text-3xl font-bold text-green-600 mt-3">KSh {selectedProduct.price.toLocaleString()}</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4 text-base text-gray-600">
+        {selectedProduct.location && (
+          <span className="flex items-center">
+            <MapPin className="h-5 w-5 mr-1.5" />
+            {selectedProduct.location}
+          </span>
+        )}
+        <span className="flex items-center">
+          <Eye className="h-5 w-5 mr-1.5" />
+          {selectedProduct.views} views
+        </span>
+        <span className="flex items-center">
+          <Calendar className="h-5 w-5 mr-1.5" />
+          Posted 2 days ago
+        </span>
+      </div>
+
+      {selectedProduct.description && selectedProduct.description.length > 3 && (
+        <div className="pt-4 border-t">
+          <h2 className="font-bold text-xl text-gray-900 mb-3">Description</h2>
+          <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">{selectedProduct.description}</p>
+        </div>
+      )}
+
+      {/* Seller section - add later when you have seller data */}
+      <div className="pt-4 border-t">
+        <h2 className="font-bold text-xl text-gray-900 mb-3">Seller Information</h2>
+        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
+          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-xl">
+            👤
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">Verified Seller</p>
+            <p className="text-sm text-gray-500">Usually responds within 1 hour</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Fixed bottom CTA */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 safe-area-inset-bottom">
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={() => alert('Contact seller feature coming soon')}
+          className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold text-lg hover:bg-[#20BA5A] active:scale-98 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
+        >
+          <MessageCircle size={24} />
+          WhatsApp Seller
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Pure Bubble Nav - Clustered */}
+<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div className="flex gap-3 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-2xl border border-gray-100">
+    
+    <button
+      onClick={() => setActiveTab('wallet')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'wallet' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <Wallet className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setActiveTab('orders')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'orders' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <ShoppingBag className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setShowPostModal(true)}
+      className="p-3 rounded-full bg-gray-900 text-white hover:bg-black transition-all"
+    >
+      <Plus className="w-5 h-5" />
+    </button>
+
+    <button
+      onClick={() => setActiveTab('profile')}
+      className={`p-3 rounded-full transition-all ${
+        activeTab === 'profile' 
+          ? 'bg-green-500 text-white' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <User className="w-5 h-5" />
+    </button>
+
+  </div>
+</div>
+
+
+    </div>
+    
   )
+
 }
