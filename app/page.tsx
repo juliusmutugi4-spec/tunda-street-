@@ -898,16 +898,8 @@ const handleDelete = async (productId: number) => {
 
 const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const files = Array.from(e.target.files || [])
-  if (imageFiles.length + files.length > 10) {
-    alert('Max 10 images allowed')
-    return
-  }
-  for (const file of files) {
-    if (file.size > 14 * 1024) {
-      alert(`${file.name} is too large. Max 14MB`)
-      return
-    }
-  }
+  
+  // No limits at all
   setImageFiles(prev => [...prev,...files])
   const newPreviews = files.map(file => URL.createObjectURL(file))
   setImagePreviews(prev => [...prev,...newPreviews])
@@ -940,40 +932,40 @@ const handlePost = async () => {
     setShowAuthModal(true)
     return
   }
-
   setLoading(true)
-  let image_urls: string[] = []
-  if (imageFiles.length > 0) {
-    image_urls = await uploadImages()
-  }
+  
+  try {
+    let image_urls: string[] = []
+    if (imageFiles.length > 0) {
+      image_urls = await uploadImages()
+    }
 
-  const { error } = await supabase.from('products').insert({
-    title: newItem.title,
-    price: parseInt(newItem.price),
-    phone: newItem.phone,
-    description: newItem.description,
-    category: newItem.category,
-    location: newItem.location,
-    images: image_urls,
-    youtube_url: youtubeUrl,
-    user_id: user.id,
-    digital_type: newItem.category === 'digital'? newItem.digital_type : null,
-    download_url: newItem.category === 'digital'? newItem.download_url : null
-  })
+    const { error } = await supabase.from('products').insert({
+      title: newItem.title,
+      price: parseInt(newItem.price),
+      phone: newItem.phone,
+      description: newItem.description,
+      category: newItem.category,
+      location: newItem.location,
+      images: image_urls,     // <-- Fixes error 1
+      youtube_url: youtubeUrl,
+      user_id: user!.id,      // <-- Fixes error 2: added !
+    })
 
-  if (!error) {
-    setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '' })
+    if (error) throw error
+    
+    alert('Posted!') // Use alert instead of toasts for now
     setImageFiles([])
     setImagePreviews([])
-    setYoutubeUrl('')
-    setShowPostModal(false)
-    fetchProducts()
-  } else {
-    alert('Post failed: ' + error.message)
+setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: '', digital_type: '', download_url: '' })
+    
+  } catch (err) {
+    console.error(err)
+    alert('Post failed')
+  } finally {
+    setLoading(false)
   }
-  setLoading(false)
 }
-
   
   // MAIN VIEW
   return (
