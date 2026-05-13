@@ -19,6 +19,7 @@ type Product = {
   phone: string
   description?: string
   image_url?: string
+  images?: string[]
   category: string
   location: string
   youtube_url?: string
@@ -1581,21 +1582,23 @@ onClick={handleSend}
   }}
   className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium cursor-pointer hover:bg-black active:scale-95"
 >
-  View
-</button>
-                      {product.image_url? (
-                        <img src={product.image_url} alt={product.title} className="w-12 h-12 object-cover rounded-lg" />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-xl">
-                          {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-
+View </button>
+{product.images?.[0]? (
+  <img
+    src={product.images[0]}
+    alt={product.title}
+    className="w-12 h-12 object-cover rounded-lg"
+  />
+) : (
+  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-xl">
+    {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
+  </div>
+)}
+</div>
+</div>
+))}
+</div>
+</>
           ) : activeTab === 'orders' ? (
             <div className="p-4 space-y-4">
               <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
