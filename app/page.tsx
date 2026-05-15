@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Loader2, Menu, Plus, X, Upload, Search, MapPin, ArrowLeft, Phone,MessageCircle, Calendar, Wallet, Grid3X3, Megaphone,ShoppingBag,  User, Heart, Eye, EyeOff, Trash2, ArrowDownToLine, ArrowUpFromLine, Send,Shield } from "lucide-react"
+import { Loader2, Menu, Plus, X,ChevronRight,  Upload, Search, MapPin, ArrowLeft, Phone,MessageCircle, Calendar, Wallet, Grid3X3, Megaphone,ShoppingBag,  User, Heart, Eye, EyeOff, Trash2, ArrowDownToLine, ArrowUpFromLine, Send,Shield } from "lucide-react"
 import SimilarItems from '@/app/components/SimilarItems'
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +29,7 @@ type Product = {
   views: number
    digital_type?: string  
   download_url?: string 
+  product_images?: { id: number; image_url: string; position: number }[]
 }
 
 type UserType = {
@@ -52,6 +53,7 @@ type Order = {
   products?: {
     title: string
     image_url?: string
+    images?: string[];
   }
 }
 
@@ -126,6 +128,8 @@ function TimerPopup({
   openNavigation, 
   loading 
 }: { 
+
+
   activeRide: any, 
   handleAcceptRide: () => void, 
   handleRejectRide: () => void, 
@@ -202,7 +206,137 @@ useEffect(() => {
     </div>
   )
 }
+
+function ImageCarousel({ images }: { images: string[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [screenWidth, setScreenWidth] = useState(0);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const goNext = () => {
+    if (activeIndex < images.length - 1) {
+      scrollToIndex(activeIndex + 1);
+    }
+  };
+
+  const scrollToIndex = (index: number) => {
+    scrollRef.current?.scrollTo({ left: index * screenWidth, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateWidth = () => setScreenWidth(window.innerWidth);
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (screenWidth === 0) return;
+    setActiveIndex(Math.round(e.currentTarget.scrollLeft / screenWidth));
+  };
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <div className="relative w-full">
+      
+      {/* Image scroll area */}
+      <div 
+        ref={scrollRef}
+        className="overflow-x-auto snap-x snap-mandatory flex scroll-smooth"
+        onScroll={handleScroll}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {images.map((img, i) => (
+          <img 
+            key={i} 
+            src={img} 
+            alt={`product-${i}`}
+            onClick={() => setFullscreenImage(img)}
+            className="w-full h-auto object-cover max-h-[50vh] flex-shrink-0 snap-start cursor-pointer"
+            style={{ width: '100vw' }}
+          />
+        ))}
+      </div>
+
+      {/* Next button - centered on main carousel */}
+      {images.length > 1 && activeIndex < images.length - 1 && (
+        <button
+          onClick={goNext}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 
+                     flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white 
+                     text-base font-semibold px-5 py-2.5 rounded-full shadow-lg 
+                     hover:bg-black/75 active:scale-95 transition-all"
+        >
+          Next
+          <ChevronRight size={18} />
+        </button>
+      )}
+
+      {/* Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full z-20">
+          {activeIndex + 1}/{images.length}
+        </div>
+      )}
+
+      {/* Fullscreen modal */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 bg-black z-50 flex items-center justify-center" 
+          onClick={() => setFullscreenImage(null)}
+        >
+          <img 
+            src={fullscreenImage} 
+            alt="fullscreen" 
+            className="max-w-full max-h-full object-contain" 
+            onClick={(e) => e.stopPropagation()} 
+          />
+          
+          {/* Top-left controls in fullscreen */}
+          <div className="absolute top-5 left-5 z-50 flex gap-2">
+            {images.length > 1 && activeIndex < images.length - 1 && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }} 
+                className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white 
+                           text-sm font-semibold px-4 py-2 rounded-full shadow-lg 
+                           hover:bg-black/75 active:scale-95 transition-all"
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Close button */}
+          <button 
+            onClick={() => setFullscreenImage(null)} 
+            className="absolute top-5 right-5 text-white bg-black/50 rounded-full p-2 hover:bg-black/70"
+          >
+            <X size={24} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function StreetMarket() {
+ const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+const [showChatModal, setShowChatModal] = useState(false); 
+  const [showProductDetails, setShowProductDetails] = useState(false);
+const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+const [imageFile, setImageFile] = useState(null)
+const [imageUrl, setImageUrl] = useState('')
+const [editTitle, setEditTitle] = useState('');
+const [editDesc, setEditDesc] = useState('');
+const [editFiles, setEditFiles] = useState([]);
   const [viewImage, setViewImage] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState(null)
 const [showModal, setShowModal] = useState(false)
@@ -250,6 +384,7 @@ const [showModal, setShowModal] = useState(false)
   const [touchStartX, setTouchStartX] = useState(0)
   const [currentX, setCurrentX] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  
   const [newItem, setNewItem] = useState({ 
   
     title: '', 
@@ -259,19 +394,49 @@ const [showModal, setShowModal] = useState(false)
     category: '', 
     location: 'Nairobi', 
     digital_type: '',
-    download_url: '' 
+    download_url: '', 
+   image_url: '' 
   })
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [, forceUpdate] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
+  
+const openChat = (sellerId: string, productId: string) => {
+  // Close the image modal
+  setViewImage(null);
+  
+  // Open your chat modal/page - change this to match your code
+  setSelectedSellerId(sellerId);
+  setSelectedProductId(productId);
+  setShowChatModal(true);
+};
 useEffect(() => {
   const timer = setInterval(() => forceUpdate(n => n + 1), 1000)
   return () => clearInterval(timer)
 }, [])
+const [uploading, setUploading] = useState(false)
 
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  setUploading(true)
+  const fileName = `${Date.now()}-${file.name}`
+
+  const { error } = await supabase.storage.from('uploads').upload(fileName, file)
+  if (error) {
+    alert(error.message)
+    setUploading(false)
+    return
+  }
+
+  const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName)
+  setNewItem(prev => ({...prev, image_url: urlData.publicUrl }))
+  setUploading(false)
+}
 
 function showToast(message: string) {
   const id = Date.now();
@@ -285,7 +450,13 @@ function showToast(message: string) {
     
     fetchProducts()
   }, [])
-
+useEffect(() => {
+  if (editingProduct) {
+setEditTitle(editingProduct.title || '');
+    setEditDesc(editingProduct.description || '');
+    setEditFiles([]);
+  }
+}, [editingProduct]);
 useEffect(() => {
   if (user) {
     fetchFavorites()
@@ -331,6 +502,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, []);
+
 
 const handleRelease = async (orderId: string) => {
   if (!user) return
@@ -638,22 +810,46 @@ useEffect(() => {
 }, [])
 
 const fetchWallet = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  console.log("User:", user)
+  
   if (!user) return
   const { data } = await supabase
-   .from('wallets')
-   .select('balance, escrow_balance, phone')
-   .eq('user_id', user.id)
-   .single()
+    .from('wallets')
+    .select('balance, escrow_balance, phone')
+    .eq('user_id', user.id)
+    .single()
   if (data) setWallet(data)
 }
-
 const fetchProducts = async () => {
-  const { data } = await supabase
-   .from('products')
-   .select('*')
-   .order('created_at', { ascending: false })
-  if (data) setProducts(data)
-}
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
+    .from('products')
+    .select(`
+        *,
+        product_images ( id, image_url, position )
+      `)
+    .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+ const productsWithSortedImages = data.map(product => ({
+  ...product, // <-- you missed this spread
+  product_images: (product.product_images || []).sort(
+    (a: { position: number }, b: { position: number }) => a.position - b.position
+  )
+}))
+
+    console.log('Products from DB:', productsWithSortedImages); // <-- add this
+    setProducts(productsWithSortedImages);
+
+  } catch (err: any) {
+    console.error('FetchProducts error:', err.message || err);
+  } finally {
+    setLoading(false);
+  }
+};
 
 const fetchFavorites = async () => {
   if (!user) return
@@ -917,57 +1113,107 @@ const uploadImages = async (): Promise<string[]> => {
   for (const file of imageFiles) {
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`
-    const { error } = await supabase.storage.from('uploads').upload(fileName, file)
+    const { data, error } = await supabase.storage.from('uploads').upload(fileName, file)
     if (error) {
       console.error('Upload error:', error)
       continue
     }
-    const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName)
+    const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(data.path)
     urls.push(publicUrl)
   }
   return urls
 }
 
 const handlePost = async () => {
+  console.log('imageFiles:', imageFiles);
+
   if (!user) {
-    setShowAuthModal(true)
-    return
+    setShowAuthModal(true);
+    return;
   }
-  setLoading(true)
-  
+
+  if (!newItem.title.trim()) {
+    alert('Enter a title');
+    return;
+  }
+
+  setLoading(true);
+
   try {
-    let image_urls: string[] = []
-    if (imageFiles.length > 0) {
-      image_urls = await uploadImages()
+    // 1. Insert product first to get ID
+    const { data: product, error: productError } = await supabase
+     .from('products')
+     .insert({
+        title: newItem.title,
+        price: parseInt(newItem.price) || 0,
+        phone: newItem.phone,
+        description: newItem.description,
+        category: newItem.category,
+        location: newItem.location || 'Nairobi',
+        youtube_url: youtubeUrl,
+        user_id: user.id
+      })
+     .select()
+     .single();
+
+    if (productError) throw productError;
+
+    const productId = product.id;
+    const imageUrls = [];
+
+    // 2. Upload all images
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${i}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+       .from('uploads')
+       .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+       .from('uploads')
+       .getPublicUrl(fileName);
+
+      imageUrls.push(urlData.publicUrl);
     }
 
-    const { error } = await supabase.from('products').insert({
-      title: newItem.title,
-      price: parseInt(newItem.price),
-      phone: newItem.phone,
-      description: newItem.description,
-      category: newItem.category,
-      location: newItem.location,
-      images: image_urls,     // <-- Fixes error 1
-      youtube_url: youtubeUrl,
-      user_id: user!.id,      // <-- Fixes error 2: added !
-    })
+    // 3. Insert all image URLs into product_images
+    if (imageUrls.length > 0) {
+      const inserts = imageUrls.map((url, i) => ({
+        product_id: productId,
+        image_url: url,
+        position: i
+      }));
 
-    if (error) throw error
-    
-    alert('Posted!') // Use alert instead of toasts for now
-    setImageFiles([])
-    setImagePreviews([])
-setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: '', digital_type: '', download_url: '' })
-    
-  } catch (err) {
-    console.error(err)
-    alert('Post failed')
+      const { error: imagesError } = await supabase
+       .from('product_images')
+       .insert(inserts);
+
+      if (imagesError) throw imagesError;
+    }
+
+    alert('Posted!');
+    // Reset form, refetch...
+    setImageFiles([]);
+    setImagePreviews([]);
+    setYoutubeUrl('');
+    setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '', image_url: '' });
+    setShowPostModal(false);
+    fetchProducts();
+
+  } catch (err: any) {
+    console.error(err);
+    alert('Post failed: ' + err.message);
   } finally {
-    setLoading(false)
+    setLoading(false);
   }
-}
-  
+};
   // MAIN VIEW
   return (
     
@@ -989,40 +1235,7 @@ setNewItem({ title: '', price: '', phone: '', description: '', category: '', loc
       ))}
     </div>
 
-{/* Left Swipe Drawer */}
-<div 
-  onClick={(e) => e.stopPropagation()}
-  onTouchEnd={(e) => e.stopPropagation()}
-  className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 pointer-events-auto ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
->
-  <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-    <h2 className="font-bold text-lg text-gray-900">Menu</h2>
-    <button 
-      type="button"
-      onClick={() => setDrawerOpen(false)} 
-      className="p-2 hover:bg-gray-100 rounded-lg active:bg-gray-200"
-    >
-      <X className="w-5 h-5 text-gray-900 pointer-events-none" />
-    </button>
-  </div>
-  <div className="flex flex-col gap-1 p-4">
-    <button onClick={() => {setActiveTab('wallet'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'wallet' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`}>
-      <Wallet className="w-5 h-5" /> Wallet
-    </button>
-    <button onClick={() => {setActiveTab('categories'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'categories' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`}>
-      <Grid3X3 className="w-5 h-5" /> Grid
-    </button>
-    <button onClick={() => {setActiveTab('orders'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'orders' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`}>
-      <ShoppingBag className="w-5 h-5" /> Orders
-    </button>
-    <button onClick={() => {setActiveTab('profile'); setDrawerOpen(false)}} className={`flex items-center gap-3 p-3 rounded-lg text-gray-900 ${activeTab === 'profile' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'}`}>
-      <User className="w-5 h-5" /> Profile
-    </button>
-    <button onClick={() => {setShowPostModal(true); setDrawerOpen(false)}} className="flex items-center gap-3 p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 mt-4">
-      <Plus className="w-5 h-5" /> Sell
-    </button>
-  </div>
-</div>
+
 {/* Backdrop */}
 {drawerOpen && (
   <div 
@@ -1248,6 +1461,8 @@ setNewItem({ title: '', price: '', phone: '', description: '', category: '', loc
       return;
     }
     
+
+    
     const { error } = await supabase
       .from('streetpay_rides')
       .insert([{ 
@@ -1348,85 +1563,88 @@ setNewItem({ title: '', price: '', phone: '', description: '', category: '', loc
   </div>
 )}
 
-        {/* DEPOSIT MODAL */}
-        {showDepositModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
-            <div className="bg-white w-full max-w-sm rounded-3xl p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-900">Deposit Money</h2>
-                <X onClick={() => setShowDepositModal(false)} className="cursor-pointer text-gray-500" />
-              </div>
-              <input
-                type="number"
-                placeholder="Amount (KSh)"
-                value={depositAmount}
-                onChange={e => setDepositAmount(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-3"
-              />
-<input
-  type="text"
-  placeholder="M-Pesa Phone 254..."
-  value={depositPhone}
-  onChange={e => setDepositPhone(e.target.value)}
-  className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4"
-/>
-<button
-onClick={async () => {
-  if (!user) return setShowAuthModal(true)
-  if (!depositAmount || !depositPhone) return alert('Enter amount and phone')
-  
-  setLoading(true)
-     const res = await fetch('/api/mpesa/stkpush', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      amount: parseInt(depositAmount),
-      phone: depositPhone
-    })
-  })
-
-  const result = await res.json()
-  setLoading(false)
-
-  if (result.ResponseCode === '0') {
-    alert('Check your phone for M-Pesa PIN prompt.')
-    setShowDepositModal(false)
-    setDepositAmount('')
-    setTimeout(() => {
-      fetchWallet()
-      alert('Wallet updated! Check your balance.')
-    }, 10000)
-  } else {
-    alert('Deposit failed. Try again.')
-  }
-}}
-disabled={loading || !depositAmount || !depositPhone}
-style={{
-  width: '100%',
-  backgroundColor: 'white',
-  color: 'black',
-  border: '2px solid #10b981',
-  borderRadius: '12px',
-  padding: '16px',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: '8px',
-  fontWeight: '600',
-  fontSize: '14px',
-  opacity: (loading || !depositAmount || !depositPhone) ? '0.6' : '1',
-  cursor: (loading || !depositAmount || !depositPhone) ? 'not-allowed' : 'pointer'
-}}
->
-  <ArrowDownToLine style={{height: '20px', width: '20px', color: '#10b981'}} />
-  <span>{loading ? 'Sending STK Push...' : 'Deposit via M-Pesa'}</span>
-</button>
-            </div>
-          </div>
-        )}
-
+{/* DEPOSIT MODAL */} 
+{showDepositModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
+    <div className="bg-white w-full max-w-sm rounded-3xl p-6">
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-lg font-bold text-gray-900">Deposit Money</h2>
+        <X onClick={() => setShowDepositModal(false)} className="cursor-pointer text-gray-500" />
+      </div>
+      
+      <input 
+        type="number" 
+        placeholder="Amount (KSh)" 
+        value={depositAmount} 
+        onChange={e => setDepositAmount(e.target.value)} 
+        className="w-full bg-white border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-3" 
+      />
+      
+      <input 
+        type="text" 
+        placeholder="M-Pesa Phone 254..." 
+        value={depositPhone} 
+        onChange={e => setDepositPhone(e.target.value)} 
+        className="w-full bg-white border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4" 
+      />
+      
+      <button 
+        onClick={async () => {
+          if (!user) return setShowAuthModal(true)
+          if (!depositAmount || !depositPhone) return alert('Enter amount and phone')
+          setLoading(true)
+          
+          const res = await fetch('/api/mpesa/stkpush', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              amount: parseInt(depositAmount),
+              phone: depositPhone
+            })
+          })
+          
+          const result = await res.json()
+          setLoading(false)
+          
+          if (result.ResponseCode === '0') {
+            alert('Check your phone for M-Pesa PIN prompt.')
+            setShowDepositModal(false)
+            setDepositAmount('')
+            setTimeout(() => {
+              fetchWallet()
+              alert('Wallet updated! Check your balance.')
+            }, 10000)
+          } else {
+            alert('Deposit failed. Try again.')
+          }
+        }} 
+        disabled={loading || !depositAmount || !depositPhone}
+        style={{
+          width: '100%',
+          backgroundColor: 'white',
+          color: 'black',
+          border: '2px solid #10b981',
+          borderRadius: '12px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: '600',
+          fontSize: '14px',
+          opacity: (loading || !depositAmount || !depositPhone) ? '0.6' : '1',
+          cursor: (loading || !depositAmount || !depositPhone) ? 'not-allowed' : 'pointer'
+        }}
+      >
+        <ArrowDownToLine style={{height: '20px', width: '20px', color: '#10b981'}} />
+        <span>{loading ? 'Sending STK Push...' : 'Deposit via M-Pesa'}</span>
+      </button>
+    </div>
+  </div>
+)}
         {/* WITHDRAW MODAL */}
         {showWithdrawModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
@@ -1480,216 +1698,304 @@ style={{
           </div>
         )}
 
-        {/* SEND/ESCROW MODAL */}
-        {showSendModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
-            <div className="bg-white w-full max-w-sm rounded-3xl p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {selectedProduct ? 'Buy with Escrow' : 'Send Money'}
-                </h2>
-                <X onClick={() => setShowSendModal(false)} className="cursor-pointer text-gray-500" />
-              </div>
-              {selectedProduct && (
-                <div className="bg-gray-50 rounded-xl p-3 mb-4">
-                  <p className="text-sm text-gray-600">Buying: {(selectedProduct as Product).title}</p>
-                  <p className="font-bold text-gray-900">KSh {(selectedProduct as Product).price.toLocaleString()}</p>
-                </div>
-              )}
-              <p className="text-sm text-gray-600 mb-3">Wallet: KSh {wallet.balance.toFixed(2)}</p>
-              <input
-                type="tel"
-                placeholder="Recipient Phone (0712345678)"
-                value={sendPhone}
-                onChange={(e) => setSendPhone(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4"
-              />
-              
-              <input
-                type="number"
-                placeholder="Amount (KSh)"
-                value={sendAmount}
-                onChange={e => setSendAmount(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4"
-              />
-              <button
+   {/* SEND/ESCROW MODAL */}
+{showSendModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
+    <div className="bg-white w-full max-w-sm rounded-3xl p-6">
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-lg font-bold text-gray-900">
+          {selectedProduct? 'Buy with Escrow' : 'Send Money'}
+        </h2>
+        <X onClick={() => setShowSendModal(false)} className="cursor-pointer text-gray-500" />
+      </div>
+      {selectedProduct && (
+        <div className="bg-gray-50 rounded-xl p-3 mb-4">
+          <p className="text-sm text-gray-600">Buying: {(selectedProduct as Product).title}</p>
+          <p className="font-bold text-gray-900">KSh {(selectedProduct as Product).price.toLocaleString()}</p>
+        </div>
+      )}
+      <p className="text-sm text-gray-600 mb-3">Wallet: KSh {wallet.balance.toFixed(2)}</p>
+      <input type="tel" placeholder="Recipient Phone (0712345678)" value={sendPhone} onChange={(e) => setSendPhone(e.target.value)} className="w-full bg-white border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4" />
+      <input type="number" placeholder="Amount (KSh)" value={sendAmount} onChange={e => setSendAmount(e.target.value)} className="w-full bg-white border-gray-300 rounded-xl p-3 text-sm text-gray-900 mb-4" />
+      <button onClick={handleSend} disabled={!sendAmount || parseInt(sendAmount) > wallet.balance} style={{ width: '100%', backgroundColor: 'white', color: 'black', border: '2px solid #000', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '14px', opacity: (!sendAmount || parseInt(sendAmount) > wallet.balance)? '0.6' : '1', cursor: (!sendAmount || parseInt(sendAmount) > wallet.balance)? 'not-allowed' : 'pointer' }}>
+        <Send style={{height: '20px', width: '20px', color: '#000'}} />
+        <span>{selectedProduct? 'Buy with Escrow' : 'Send Money'}</span>
+      </button>
+      <p className="text-xs text-gray-500 mt-3 text-center">
+        Money held safely until you confirm delivery
+      </p>
+    </div>
+  </div>
+)}
 
-onClick={handleSend}
-  disabled={!sendAmount || parseInt(sendAmount) > wallet.balance}
-  style={{
-    width: '100%',
-    backgroundColor: 'white',
-    color: 'black',
-    border: '2px solid #000000',
-    borderRadius: '12px',
-    padding: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '600',
-    fontSize: '14px',
-    opacity: (!sendAmount || parseInt(sendAmount) > wallet.balance) ? '0.6' : '1',
-    cursor: (!sendAmount || parseInt(sendAmount) > wallet.balance) ? 'not-allowed' : 'pointer'
-  }}
->
-  <Send style={{height: '20px', width: '20px', color: '#000000'}} />
-  <span>{selectedProduct ? 'Buy with Escrow' : 'Send Money'}</span>
-              </button>
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                Money held safely until you confirm delivery
-              </p>
-            </div>
+{activeTab === 'profile' && (
+  <div className="bg-green-50 rounded-xl p-4 mb-4">
+    <p className="font-medium text-gray-900">My Listings</p>
+    <p className="text-sm text-gray-600">{filteredProducts.length} items posted</p>
+    <p className="text-xs text-gray-500 mt-1">Logged in as: {user?.email}</p>
+  </div>
+)}
+
+<div className="grid grid-cols-2 gap-3">
+  {filteredProducts.map((product, index) => (
+    <div key={product.id} onClick={() => {
+      setSelectedProduct(product);
+      incrementViews(product.id);
+    }} className={`rounded-2xl p-4 flex-col justify-between min-h-[180px] text-left relative cursor-pointer ${CARD_COLORS[index % 6]}`}>
+      <div onClick={(e) => toggleFavorite(product.id, e)} className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full z-10">
+        <Heart className={`h-4 w-4 ${favorites.includes(product.id)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+      </div>
+      <div>
+        <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 pr-6">{product.title}</h3>
+        <p className="font-bold text-gray-900">KSh {product.price.toLocaleString()}</p>
+        <p className="text-xs text-gray-500 mt-1 flex items-center">
+          <MapPin className="h-3 w-3 mr-0.5" />{product.location}
+        </p>
+        <p className="text-xs text-gray-400 mt-1 flex items-center">
+          <Eye className="h-3 w-3 mr-0.5" />{product.views}
+        </p>
+      </div>
+      <div className="flex justify-between items-end mt-3">
+        <button onClick={(e) => {
+          e.stopPropagation();
+          setViewImage(product.images?.[0] || product.image_url || '/placeholder.png');
+        }} className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium cursor-pointer hover:bg-black active:scale-95">
+          View
+        </button>
+        {product.images?.[0]? (
+          <img src={product.images[0]} alt={product.title} className="w-12 h-12 object-cover rounded-lg" />
+        ) : product.image_url? (
+       <img 
+  src={product.product_images?.[0]?.image_url} 
+  alt={product.title}
+  className="w-full h-48 object-cover rounded-lg"
+/>
+        ) : (
+          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-xl">
+            {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
+          </div>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+{/* PRODUCT DETAIL MODAL WITH CAROUSEL */}
+{selectedProduct && (
+  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+
+      <ImageCarousel
+        images={selectedProduct.product_images?.map(img => img.image_url) || []}
+      />
+
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h2 className="text-xl font-bold text-gray-900">{selectedProduct.title}</h2>
+          <X onClick={() => setSelectedProduct(null)} className="cursor-pointer text-gray-500" />
+        </div>
+        <p className="text-2xl font-bold text-green-600">KSh {selectedProduct.price.toLocaleString()}</p>
+        <p className="text-sm text-gray-600 mt-1 flex items-center">
+          <MapPin className="h-4 w-4 mr-1" />{selectedProduct.location}
+        </p>
+        <p className="mt-3 text-gray-700">{selectedProduct.description}</p>
+        <button
+          onClick={() => {
+            setSelectedProduct(null);
+            setShowSendModal(true);
+          }}
+          className="mt-4 w-full bg-black text-white py-3 rounded-xl font-semibold"
+        >
+          Buy with Escrow
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* IMAGE FULLSCREEN MODAL */}
+{viewImage && selectedProduct && (
+  <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    
+    {/* 1. The image */}
+    <img
+      src={viewImage}
+      className="max-w-full max-h-full object-contain"
+      onClick={() => setViewImage(null)}
+      alt=""
+    />
+
+    {/* 2. Close button */}
+    <X
+      className="absolute top-4 right-4 text-white cursor-pointer bg-black/50 rounded-full p-2"
+      onClick={() => setViewImage(null)}
+    />
+
+    {/* 3. Bottom action bar */}
+    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
+
+      {/* Chat button */}
+      <button
+        onClick={() => {
+          setViewImage(null);
+         openChat(selectedProduct.user_id ?? '', String(selectedProduct.id))
+        }}
+        className="bg-green-600 text-white px-5 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg"
+      >
+        💬 Chat Seller
+      </button>
+
+      {/* Details button */}
+      <button
+        onClick={() => setShowProductDetails(true)}
+        className="bg-white text-black px-5 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg"
+      >
+        ℹ️ Details
+      </button>
+    </div>
+
+    {/* 4. Product details popup */}
+    {showProductDetails && (
+      <div
+        className="absolute bottom-20 left-4 right-4 bg-white rounded-2xl p-4 shadow-2xl max-h- overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-lg font-bold text-gray-900">{selectedProduct.title}</h3>
+          <X
+            className="cursor-pointer text-gray-500"
+            onClick={() => setShowProductDetails(false)}
+          />
+        </div>
+
+        <p className="text-2xl font-bold text-green-600 mb-2">
+          KSh {selectedProduct.price?.toLocaleString()}
+        </p>
+
+        <p className="text-sm text-gray-600 flex items-center mb-3">
+          <MapPin className="h-4 w-4 mr-1" />
+          {selectedProduct.location}
+        </p>
+
+        {/* Description */}
+        <div className="border-t pt-3">
+          <p className="text-sm font-semibold text-gray-900 mb-1">Description</p>
+          <p className="text-sm text-gray-700">{selectedProduct.description}</p>
+        </div>
+
+        {/* YouTube Link - only shows if it exists */}
+        {selectedProduct.youtube_url && (
+          <div className="border-t mt-3 pt-3">
+            <p className="text-sm font-semibold text-gray-900 mb-2">Video</p>
+            <a
+              href={selectedProduct.youtube_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-red-600 font-medium text-sm"
+            >
+              ▶️ Watch on YouTube
+            </a>
           </div>
         )}
 
-              {activeTab === 'profile' && (
-                <div className="bg-green-50 rounded-xl p-4 mb-4">
-                  <p className="font-medium text-gray-900">My Listings</p>
-                  <p className="text-sm text-gray-600">{filteredProducts.length} items posted</p>
-                  <p className="text-xs text-gray-500 mt-1">Logged in as: {user?.email}</p>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                {filteredProducts.map((product, index) => (
-                  <div
-                    key={product.id}
-                    onClick={() => setSelectedProduct(product)}
-                    className={`rounded-2xl p-4 flex flex-col justify-between min-h-[180px] text-left relative cursor-pointer ${CARD_COLORS[index % 6]}`}
-                  >
-                    <div
-                    
-                      onClick={(e) => toggleFavorite(product.id, e)}
-                      className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full z-10"
-                    >
-                      <Heart className={`h-4 w-4 ${favorites.includes(product.id)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 pr-6">{product.title}</h3>
-                      <p className="font-bold text-gray-900">KSh {product.price.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500 mt-1 flex items-center">
-                        <MapPin className="h-3 w-3 mr-0.5" />{product.location}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1 flex items-center">
-                        <Eye className="h-3 w-3 mr-0.5" />{product.views}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-end mt-3">
-                     <button
-  onClick={(e) => {
-    e.stopPropagation()
-    setViewImage(product.image_url || '/placeholder.png')
-  }}
-  className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium cursor-pointer hover:bg-black active:scale-95"
->
-View </button>
-{product.images?.[0]? (
-  <img
-    src={product.images[0]}
-    alt={product.title}
-    className="w-12 h-12 object-cover rounded-lg"
-  />
-) : (
-  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-xl">
-    {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
+        {/* Download Link - only shows if it exists */}
+        {selectedProduct.download_url && (
+          <div className="border-t mt-3 pt-3">
+            <p className="text-sm font-semibold text-gray-900 mb-2">Download</p>
+            <a
+              href={selectedProduct.download_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium w-fit"
+            >
+              ⬇️ Download File
+            </a>
+          </div>
+        )}
+
+        {/* Seller Info */}
+  
+      </div>
+    )}
+  </div>
+)}
+
+</>
+) : activeTab === 'orders'? (
+<div className="p-4 space-y-4">
+  <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
+  {orders.length === 0? (
+    <p className="text-gray-500">No orders yet</p>
+  ) : (
+    orders.map((order) => (
+      <div key={order.id} className="border rounded-lg p-4 space-y-2">
+        <div className="flex gap-3">
+          {order.products?.images?.[0]? (
+            <img src={order.products.images[0]} alt={order.products.title} className="w-16 h-16 object-cover rounded-lg" />
+          ) : order.products?.image_url? (
+            <img src={order.products.image_url} alt={order.products.title} className="w-16 h-16 object-cover rounded-lg" />
+          ) : (
+            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">📦</div>
+          )}
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <span className="font-semibold text-sm line-clamp-1">
+                {order.products?.title || 'Unknown Product'}
+              </span>
+              <span className={`px-2 py-1 rounded text-xs ${
+                order.status === 'pending'? 'bg-yellow-100 text-yellow-800' :
+                order.status === 'completed'? 'bg-green-100 text-green-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {order.status}
+              </span>
+            </div>
+            <p className="font-bold text-gray-900 mt-1">KSh {order.amount.toLocaleString()}</p>
+            <p className="text-xs text-gray-500">Order #{order.id.slice(0, 8)}</p>
+          </div>
+        </div>
+        <p>Amount: <span className="font-bold">KES {order.amount}</span></p>
+        <p className="text-sm text-gray-600">
+          {user?.id === order.buyer_id? 'You are the Buyer' : 'You are the Seller'}
+        </p>
+        {order.status === 'pending' && (
+          <div className="flex gap-2 pt-2">
+            {user?.id === order.buyer_id && (
+              <button onClick={() => handleRelease(order.id)} className="bg-green-600 text-white px-4 py-2 rounded flex-1">
+                Release Payment
+              </button>
+            )}
+            {user?.id === order.seller_id && (
+              <button onClick={() => handleRefund(order.id)} className="bg-red-600 text-white px-4 py-2 rounded flex-1">
+                Refund Buyer
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    ))
+  )}
+</div>
+) : activeTab === 'broadcast'? (
+<div className="text-center py-20">
+  <Megaphone className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+  <p className="text-lg font-bold text-gray-900 mb-2">Boost Your Items</p>
+  <p className="text-sm text-gray-500 mb-6">Get 10x more views for KSh 100</p>
+  <button className="bg-green-500 text-white px-6 py-3 rounded-xl font-medium">
+    Coming Next Week
+  </button>
+</div>
+) : null}
+
+{filteredProducts.length === 0 && (activeTab === 'wallet' || activeTab === 'categories' || activeTab === 'profile') && (
+  <div className="text-center py-16 text-gray-500">
+    <p className="text-4xl mb-2">🔍</p>
+    <p className="font-medium">{activeTab === 'profile'? 'No listings yet' : 'No items found'}</p>
+    <p className="text-sm">{activeTab === 'profile'? 'Tap + to post your first item' : 'Try another category or be the first to post'}</p>
   </div>
 )}
 </div>
-</div>
-))}
-</div>
-</>
-          ) : activeTab === 'orders' ? (
-            <div className="p-4 space-y-4">
-              <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
-              
-              {orders.length === 0 ? (
-                <p className="text-gray-500">No orders yet</p>
-              ) : (
-                orders.map((order) => (
-                  <div key={order.id} className="border rounded-lg p-4 space-y-2">
-<div className="flex gap-3">
-  {order.products?.image_url ? (
-    <img 
-      src={order.products.image_url} 
-      alt={order.products.title}
-      className="w-16 h-16 object-cover rounded-lg"
-    />
-  ) : (
-    <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">
-      📦
-    </div>
-  )}
-  
-  <div className="flex-1">
-    <div className="flex justify-between items-start">
-      <span className="font-semibold text-sm line-clamp-1">
-        {order.products?.title || 'Unknown Product'}
-      </span>
-      <span className={`px-2 py-1 rounded text-xs ${
-        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-        'bg-red-100 text-red-800'
-      }`}>
-        {order.status}
-      </span>
-    </div>
-    
-    <p className="font-bold text-gray-900 mt-1">KSh {order.amount.toLocaleString()}</p>
-    <p className="text-xs text-gray-500">Order #{order.id.slice(0, 8)}</p>
-  </div>
-</div>
-                    
-                    <p>Amount: <span className="font-bold">KES {order.amount}</span></p>
-                    <p className="text-sm text-gray-600">
-                      {user?.id === order.buyer_id ? 'You are the Buyer' : 'You are the Seller'}
-                    </p>
-
-                    {order.status === 'pending' && (
-                      <div className="flex gap-2 pt-2">
-                        {user?.id === order.buyer_id && (
-                          <button 
-                            onClick={() => handleRelease(order.id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded flex-1"
-                          >
-                            Release Payment
-                          </button>
-                        )}
-                        {user?.id === order.seller_id && (
-                          <button 
-                            onClick={() => handleRefund(order.id)}
-                            className="bg-red-600 text-white px-4 py-2 rounded flex-1"
-                          >
-                            Refund Buyer
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-          ) : activeTab === 'broadcast'? (
-            <div className="text-center py-20">
-              <Megaphone className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-lg font-bold text-gray-900 mb-2">Boost Your Items</p>
-              <p className="text-sm text-gray-500 mb-6">Get 10x more views for KSh 100</p>
-              <button className="bg-green-500 text-white px-6 py-3 rounded-xl font-medium">
-                Coming Next Week
-              </button>
-            </div>
-          ) : null}
-
-          {filteredProducts.length === 0 && (activeTab === 'wallet' || activeTab === 'categories' || activeTab === 'profile') && (
-            <div className="text-center py-16 text-gray-500">
-              <p className="text-4xl mb-2">🔍</p>
-              <p className="font-medium">{activeTab === 'profile'? 'No listings yet' : 'No items found'}</p>
-              <p className="text-sm">{activeTab === 'profile'? 'Tap + to post your first item' : 'Try another category or be the first to post'}</p>
-            </div>
-          )}
-        </div>
-
   
 
         
@@ -1940,14 +2246,19 @@ tsx
                   className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm h-20 text-gray-900 placeholder:text-gray-500"
                 />
               </div>
-
-              <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="border border-gray-300 rounded-xl p-3 mb-3 w-full text-sm text-gray-700 flex items-center justify-center gap-2 bg-white"
-              >
-                <Upload className="h-4 w-4" /> {imageFiles.length > 0 ? 'Change Images' : 'Upload Images'}
-              </button>
+<div className="mb-3">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+  <input 
+    type="file" 
+    accept="image/*" 
+    onChange={handleImageUpload}
+    className="w-full bg-white border-gray-300 rounded-xl p-3 text-sm text-gray-900"
+  />
+  {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+  {newItem.image_url && (
+    <img src={newItem.image_url} alt="Preview" className="mt-2 w-full h-40 object-cover rounded-lg" />
+  )}
+</div>
               
 
               <button
@@ -2091,17 +2402,14 @@ tsx
       </div>
     </div>
 
-    {/* Image */}
-    {selectedProduct.image_url && (
-      <div className="w-full bg-gray-100">
-        <img
-          src={selectedProduct.image_url}
-          alt={selectedProduct.title}
-          className="w-full h- object-cover max-h-[50vh]"
-        />
-      </div>
-    )}
-
+{/* Image */}
+{selectedProduct.image_url? (
+  <div className="w-full bg-gray-100">
+    <img src={selectedProduct.image_url} alt={selectedProduct.title} className="w-full h-auto object-cover max-h-[50vh]" />
+  </div>
+) : (
+  <div className="w-full h-64 bg-gray-100 flex items-center justify-center text-6xl">📦</div>
+)}
     {/* Content */}
     <div className="max-w-2xl mx-auto p-6 pb-32 space-y-6">
       <div>
@@ -2159,6 +2467,22 @@ tsx
           WhatsApp Seller
         </button>
       </div>
+    </div>
+  </div>
+)} 
+ {selectedProduct && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+      <h3>{selectedProduct.title}</h3>
+      
+      <button 
+        onClick={() => setEditingProduct(selectedProduct)}
+        className="bg-green-600 text-white px-4 py-2 rounded-lg mr-2"
+      >
+        Edit
+      </button>
+      
+      <button onClick={() => setSelectedProduct(null)}>Close</button>
     </div>
   </div>
 )}
