@@ -327,19 +327,19 @@ function ImageCarousel({ images }: { images: string[] }) {
 
 
 export default function StreetMarket() {
- const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
-const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-const [showChatModal, setShowChatModal] = useState(false); 
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
   const [showProductDetails, setShowProductDetails] = useState(false);
-const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-const [imageFile, setImageFile] = useState(null)
-const [imageUrl, setImageUrl] = useState('')
-const [editTitle, setEditTitle] = useState('');
-const [editDesc, setEditDesc] = useState('');
-const [editFiles, setEditFiles] = useState([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imageFile, setImageFile] = useState(null)
+  const [imageUrl, setImageUrl] = useState('')
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editFiles, setEditFiles] = useState([]);
   const [viewImage, setViewImage] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState(null)
-const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const [bellCount, setBellCount] = useState(0);
   const [showBoxes, setShowBoxes] = useState(false);
   const [rides, setRides] = useState<any[]>([]);
@@ -350,6 +350,18 @@ const [showModal, setShowModal] = useState(false)
   const [toasts, setToasts] = useState<{id: number, message: string}[]>([]);
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+
+  // Add this right here - groups products by category
+  const productsByCategory = filteredProducts.reduce<Record<string, Product[]>>(
+    (acc, product) => {
+      const cat = product.category || 'Other';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(product);
+      return acc;
+    },
+    {}
+  );
+
   const [showPostModal, setShowPostModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -384,67 +396,56 @@ const [showModal, setShowModal] = useState(false)
   const [touchStartX, setTouchStartX] = useState(0)
   const [currentX, setCurrentX] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  
-  const [newItem, setNewItem] = useState({ 
-  
-    title: '', 
-    price: '', 
-    phone: '', 
-    description: '', 
-    category: '', 
-    location: 'Nairobi', 
-    digital_type: '',
-    download_url: '', 
-   image_url: '' 
-  })
+  const [newItem, setNewItem] = useState({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '', image_url: '' })
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [, forceUpdate] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-const openChat = (sellerId: string, productId: string) => {
-  // Close the image modal
-  setViewImage(null);
-  
-  // Open your chat modal/page - change this to match your code
-  setSelectedSellerId(sellerId);
-  setSelectedProductId(productId);
-  setShowChatModal(true);
-};
-useEffect(() => {
-  const timer = setInterval(() => forceUpdate(n => n + 1), 1000)
-  return () => clearInterval(timer)
-}, [])
-const [uploading, setUploading] = useState(false)
 
-const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+  const openChat = (sellerId: string, productId: string) => {
+    setViewImage(null);
+    setSelectedSellerId(sellerId);
+    setSelectedProductId(productId);
+    setShowChatModal(true);
+  };
 
-  setUploading(true)
-  const fileName = `${Date.now()}-${file.name}`
+  useEffect(() => {
+    const timer = setInterval(() => forceUpdate(n => n + 1), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
-  const { error } = await supabase.storage.from('uploads').upload(fileName, file)
-  if (error) {
-    alert(error.message)
+  const [uploading, setUploading] = useState(false)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const fileName = `${Date.now()}-${file.name}`
+    const { error } = await supabase.storage.from('uploads').upload(fileName, file)
+    if (error) {
+      alert(error.message)
+      setUploading(false)
+      return
+    }
+    const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName)
+    setNewItem(prev => ({...prev, image_url: urlData.publicUrl }))
     setUploading(false)
-    return
   }
 
-  const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(fileName)
-  setNewItem(prev => ({...prev, image_url: urlData.publicUrl }))
-  setUploading(false)
-}
+  function showToast(message: string) {
+    const id = Date.now();
+    setToasts(current => [...current, { id, message }]);
+    setTimeout(() => {
+      setToasts(current => current.filter(t => t.id!== id));
+    }, 4000);
+  }
 
-function showToast(message: string) {
-  const id = Date.now();
-  setToasts(current => [...current, { id, message }]);
-  setTimeout(() => {
-    setToasts(current => current.filter(t => t.id!== id));
-  }, 4000);
-}
+useEffect(() => {
+  if (filteredProducts.length > 0) {
+    console.log('First product:', filteredProducts[0])
+  }
+}, [filteredProducts])
 
   useEffect(() => {
     
@@ -578,25 +579,33 @@ const handleSend = async () => {
     .eq('phone', sendPhone)
     .single();
     
-  if (recipientError || !recipient) {
-    alert('User not found with phone number: ' + sendPhone); 
-    return;
-  }
-  if (recipient.id === user.id) {
-    alert('You cannot send money to yourself'); 
-    return;
-  }
+// Get logged in user first
+const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+if (userError || !currentUser) {
+  alert('Not logged in!');
+  return;
+}
 
-  // Deduct from your wallet
-  const { error: deductError } = await supabase
-    .from('wallets')
-    .update({ balance: wallet.balance - amount })
-    .eq('user_id', user.id);
-    
-  if (deductError) {
-    alert('Failed to send: ' + deductError.message); 
-    return;
-  }
+if (recipientError || !recipient) { 
+  alert('User not found with phone number: ' + sendPhone); 
+  return; 
+}
+
+if (recipient.id === currentUser.id) { 
+  alert('You cannot send money to yourself'); 
+  return; 
+}
+
+// Deduct from your wallet
+const { error: deductError } = await supabase
+  .from('wallets')
+  .update({ balance: wallet.balance - amount })
+  .eq('user_id', currentUser.id);
+
+if (deductError) {
+  alert('Failed to send: ' + deductError.message);
+  return;
+}
 
   // Add to recipient wallet using RPC
   const { error: addError } = await supabase.rpc('increment_wallet', {
@@ -1126,24 +1135,20 @@ const uploadImages = async (): Promise<string[]> => {
 
 const handlePost = async () => {
   console.log('imageFiles:', imageFiles);
-
   if (!user) {
     setShowAuthModal(true);
     return;
   }
-
   if (!newItem.title.trim()) {
     alert('Enter a title');
     return;
   }
-
   setLoading(true);
-
   try {
     // 1. Insert product first to get ID
     const { data: product, error: productError } = await supabase
-     .from('products')
-     .insert({
+      .from('products')
+      .insert({
         title: newItem.title,
         price: parseInt(newItem.price) || 0,
         phone: newItem.phone,
@@ -1153,60 +1158,51 @@ const handlePost = async () => {
         youtube_url: youtubeUrl,
         user_id: user.id
       })
-     .select()
-     .single();
-
+      .select()
+      .single();
     if (productError) throw productError;
-
     const productId = product.id;
     const imageUrls = [];
-
     // 2. Upload all images
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i];
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${i}.${fileExt}`;
-
       const { error: uploadError } = await supabase.storage
-       .from('uploads')
-       .upload(fileName, file);
-
+        .from('uploads')
+        .upload(fileName, file);
       if (uploadError) {
         console.error('Upload error:', uploadError);
         continue;
       }
-
       const { data: urlData } = supabase.storage
-       .from('uploads')
-       .getPublicUrl(fileName);
-
+        .from('uploads')
+        .getPublicUrl(fileName);
       imageUrls.push(urlData.publicUrl);
     }
-
-    // 3. Insert all image URLs into product_images
+    console.log('Uploaded URLs:', imageUrls); // DEBUG
+    // 3. Insert to product_images
     if (imageUrls.length > 0) {
       const inserts = imageUrls.map((url, i) => ({
         product_id: productId,
         image_url: url,
         position: i
       }));
-
       const { error: imagesError } = await supabase
-       .from('product_images')
-       .insert(inserts);
-
+        .from('product_images')
+        .insert(inserts);
       if (imagesError) throw imagesError;
+      // 4. Update products.image_url with first image
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ 
+          image_url: imageUrls[0] 
+        })
+        .eq('id', productId);
+      if (updateError) throw updateError;
     }
-
     alert('Posted!');
-    // Reset form, refetch...
-    setImageFiles([]);
-    setImagePreviews([]);
-    setYoutubeUrl('');
-    setNewItem({ title: '', price: '', phone: '', description: '', category: '', location: 'Nairobi', digital_type: '', download_url: '', image_url: '' });
-    setShowPostModal(false);
-    fetchProducts();
-
+    // Reset form...
   } catch (err: any) {
     console.error(err);
     alert('Post failed: ' + err.message);
@@ -1736,45 +1732,73 @@ const handlePost = async () => {
   </div>
 )}
 
-<div className="grid grid-cols-2 gap-3">
-  {filteredProducts.map((product, index) => (
-    <div key={product.id} onClick={() => {
-      setSelectedProduct(product);
-      incrementViews(product.id);
-    }} className={`rounded-2xl p-4 flex-col justify-between min-h-[180px] text-left relative cursor-pointer ${CARD_COLORS[index % 6]}`}>
-      <div onClick={(e) => toggleFavorite(product.id, e)} className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full z-10">
-        <Heart className={`h-4 w-4 ${favorites.includes(product.id)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-      </div>
-      <div>
-        <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 pr-6">{product.title}</h3>
-        <p className="font-bold text-gray-900">KSh {product.price.toLocaleString()}</p>
-        <p className="text-xs text-gray-500 mt-1 flex items-center">
-          <MapPin className="h-3 w-3 mr-0.5" />{product.location}
-        </p>
-        <p className="text-xs text-gray-400 mt-1 flex items-center">
-          <Eye className="h-3 w-3 mr-0.5" />{product.views}
-        </p>
-      </div>
-      <div className="flex justify-between items-end mt-3">
-        <button onClick={(e) => {
-          e.stopPropagation();
-          setViewImage(product.images?.[0] || product.image_url || '/placeholder.png');
-        }} className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-medium cursor-pointer hover:bg-black active:scale-95">
-          View
-        </button>
-        {product.images?.[0]? (
-          <img src={product.images[0]} alt={product.title} className="w-12 h-12 object-cover rounded-lg" />
-        ) : product.image_url? (
-       <img 
-  src={product.product_images?.[0]?.image_url} 
-  alt={product.title}
-  className="w-full h-48 object-cover rounded-lg"
-/>
-        ) : (
-          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-xl">
-            {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
-          </div>
-        )}
+<div className="space-y-6">
+  {Object.entries(productsByCategory).map(([category, products]: [string, Product[]]) => (
+    <div key={category}>
+      {/* Category title */}
+      <h2 className="text-lg font-bold mb-3 capitalize">{category}</h2>
+
+      {/* Horizontal scroll row */}
+      <div className="overflow-x-auto pb-3 -mx-4 px-4">
+        <div className="flex gap-3 w-max">
+          {products.map((product, index) => (
+            <div
+              key={product.id}
+              onClick={() => { setSelectedProduct(product); incrementViews(product.id); }}
+              className={`rounded-2xl overflow-hidden bg-white shadow-sm cursor-pointer relative flex-shrink-0 w-44 ${CARD_COLORS[index % 6]}`}
+            >
+              {/* Favorite button */}
+              <div
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, e); }}
+                className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full z-10"
+              >
+                <Heart className={`h-4 w-4 ${favorites.includes(product.id)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+              </div>
+
+              {/* Image */}
+              <div className="relative h-28 w-full">
+                {product.images?.[0] || product.image_url? (
+                  <img
+                    src={product.images?.[0] || product.image_url}
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-3xl">
+                    {CATEGORIES.find(c => c.value === product.category)?.emoji || '📦'}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="p-2">
+                <h3 className="font-semibold text-gray-900 text-xs mb-1 line-clamp-1">
+                  {product.title}
+                </h3>
+                <p className="font-bold text-gray-900 text-xs">
+                  KSh {product.price.toLocaleString()}
+                </p>
+                <p className="text-[10px] text-gray-500 mt-1 flex items-center">
+                  <MapPin className="h-3 w-3 mr-0.5" />{product.location}
+                </p>
+                <div className="flex gap-1 mt-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setViewImage(product.images?.[0] || product.image_url || '/placeholder.png'); }}
+                    className="flex-1 bg-gray-100 text-gray-800 text-[10px] py-1 rounded-md font-medium hover:bg-gray-200"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); /* order logic */ }}
+                    className="flex-1 bg-gray-900 text-white text-[10px] py-1 rounded-md font-medium hover:bg-black"
+                  >
+                    Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   ))}
@@ -1923,60 +1947,82 @@ const handlePost = async () => {
 
 </>
 ) : activeTab === 'orders'? (
-<div className="p-4 space-y-4">
-  <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
-  {orders.length === 0? (
-    <p className="text-gray-500">No orders yet</p>
-  ) : (
-    orders.map((order) => (
-      <div key={order.id} className="border rounded-lg p-4 space-y-2">
-        <div className="flex gap-3">
-          {order.products?.images?.[0]? (
-            <img src={order.products.images[0]} alt={order.products.title} className="w-16 h-16 object-cover rounded-lg" />
-          ) : order.products?.image_url? (
-            <img src={order.products.image_url} alt={order.products.title} className="w-16 h-16 object-cover rounded-lg" />
-          ) : (
-            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">📦</div>
-          )}
-          <div className="flex-1">
-            <div className="flex justify-between items-start">
-              <span className="font-semibold text-sm line-clamp-1">
-                {order.products?.title || 'Unknown Product'}
-              </span>
-              <span className={`px-2 py-1 rounded text-xs ${
-                order.status === 'pending'? 'bg-yellow-100 text-yellow-800' :
-                order.status === 'completed'? 'bg-green-100 text-green-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {order.status}
-              </span>
+  <div className="p-4 space-y-4">
+    <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
+    {orders.length === 0? (
+      <p className="text-gray-500">No orders yet</p>
+    ) : (
+      orders.map((order) => (
+        <div key={order.id} className="border rounded-lg p-4 space-y-2">
+          <div className="flex gap-3">
+            {/* Image with fallback */}
+            {(() => {
+              const imgSrc = order.products?.images?.[0] || order.products?.image_url
+              return imgSrc? (
+                <img
+                  src={imgSrc}
+                  alt={order.products?.title}
+                  className="w-16 h-16 object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">
+                  📦
+                </div>
+              )
+            })()}
+
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <span className="font-semibold text-sm line-clamp-1">
+                  {order.products?.title || 'Unknown Product'}
+                </span>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  order.status === 'pending'? 'bg-yellow-100 text-yellow-800' :
+                  order.status === 'completed'? 'bg-green-100 text-green-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {order.status}
+                </span>
+              </div>
+              <p className="font-bold text-gray-900 mt-1">
+                KSh {order.amount.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">
+                Order #{order.id.slice(0, 8)}
+              </p>
             </div>
-            <p className="font-bold text-gray-900 mt-1">KSh {order.amount.toLocaleString()}</p>
-            <p className="text-xs text-gray-500">Order #{order.id.slice(0, 8)}</p>
           </div>
+
+          <p>Amount: <span className="font-bold">KES {order.amount}</span></p>
+          <p className="text-sm text-gray-600">
+            {user?.id === order.buyer_id? 'You are the Buyer' : 'You are the Seller'}
+          </p>
+
+          {order.status === 'pending' && (
+            <div className="flex gap-2 pt-2">
+              {user?.id === order.buyer_id && (
+                <button
+                  onClick={() => handleRelease(order.id)}
+                  className="bg-green-600 text-white px-4 py-2 rounded flex-1"
+                >
+                  Release Payment
+                </button>
+              )}
+              {user?.id === order.seller_id && (
+                <button
+                  onClick={() => handleRefund(order.id)}
+                  className="bg-red-600 text-white px-4 py-2 rounded flex-1"
+                >
+                  Refund Buyer
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        <p>Amount: <span className="font-bold">KES {order.amount}</span></p>
-        <p className="text-sm text-gray-600">
-          {user?.id === order.buyer_id? 'You are the Buyer' : 'You are the Seller'}
-        </p>
-        {order.status === 'pending' && (
-          <div className="flex gap-2 pt-2">
-            {user?.id === order.buyer_id && (
-              <button onClick={() => handleRelease(order.id)} className="bg-green-600 text-white px-4 py-2 rounded flex-1">
-                Release Payment
-              </button>
-            )}
-            {user?.id === order.seller_id && (
-              <button onClick={() => handleRefund(order.id)} className="bg-red-600 text-white px-4 py-2 rounded flex-1">
-                Refund Buyer
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    ))
-  )}
-</div>
+      ))
+    )}
+  </div>
+
 ) : activeTab === 'broadcast'? (
 <div className="text-center py-20">
   <Megaphone className="h-16 w-16 text-gray-300 mx-auto mb-4" />
