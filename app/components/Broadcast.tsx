@@ -169,17 +169,24 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Matches - SCROLLABLE INSIDE FORM */}
+{/* Matches - SCROLLABLE INSIDE FORM */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <label className="text-xs font-semibold text-gray-400">Matches ({matches.length})</label>
+              <label className="text-xs font-black tracking-widest bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 text-transparent bg-clip-text uppercase font-mono flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]">
+                <span className="flex h-1.5 w-1.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                </span>
+                Matches ({matches.length})
+              </label>
               <button type="button" onClick={addMatch}
-                className="group text-xs font-bold text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 px-3.5 py-1.5 rounded-lg border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/20 shadow-lg shadow-emerald-500/5 transition-all duration-200 active:scale-95">
-                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200 ease-out" /> 
+                className="group text-xs font-black tracking-wider text-white flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-red-600 px-4 py-2 rounded-xl shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)] hover:-translate-y-0.5 transition-all duration-200 active:scale-95">
+                <Plus className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-300 ease-out" /> 
                 <span>Add Game</span>
               </button>
 
             </div>
+
 
             {/* KEY FIX: max-h-[200px] so matches scroll before form scrolls */}
             
