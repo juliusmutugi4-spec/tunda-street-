@@ -159,13 +159,24 @@ console.log('Tips from DB:', tips)
 
   }
   return (
-    <div className="min-h-screen w-full bg-gray-50">
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white min-h-screen px-4 sm:px-6">
+    <div
+  className="min-h-screen w-full relative overflow-hidden"
+  style={{
+    background: `
+      radial-gradient(circle at top left, rgba(59,130,246,0.25), transparent 35%),
+      radial-gradient(circle at bottom right, rgba(37,99,235,0.25), transparent 35%),
+      linear-gradient(180deg, #0f172a 0%, #172554 40%, #1e3a8a 100%)
+    `,
+  }}
+>
+  <div className="absolute top-0 left-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl" />
+  <div className="absolute bottom-0 right-0 w-72 h-72 bg-cyan-400/20 rounded-full blur-3xl" />
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white/10 backdrop-blur-2xl min-h-screen px-4 sm:px-6 border-x border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.35)] relative z-10">
 
         {/* HEADER */}
-        <div className="sticky top-0 bg-white z-10 py-4 sm:py-5 border-b">
+        <div className="sticky top-0 bg-blue-950/70 backdrop-blur-xl z-10 py-4 sm:py-5 border-b border-blue-400/20">
           <div className="flex justify-between items-center">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
               {activeTab === 'wallet' ? 'Home' : 'Profile'}
             </h1>
             {user ? (
@@ -200,7 +211,7 @@ console.log('Tips from DB:', tips)
             <div className="space-y-4 sm:space-y-6">
               
               {/* User info */}
-              <div className="bg-green-50 rounded-xl p-4 sm:p-6">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-xl p-4 sm:p-6">
                 <p className="font-medium text-sm sm:text-base text-gray-900">My Account</p>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{user?.email || 'Not signed in'}</p>
               </div>
@@ -238,19 +249,55 @@ console.log('Tips from DB:', tips)
       </div>
 
       {/* 3 BOTTOM BUTTONS - responsive */}
-      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex gap-2 sm:gap-3 bg-white/90 backdrop-blur-md p-2 sm:p-3 rounded-full shadow-2xl border-gray-100">
-          <button onClick={() => setActiveTab('wallet')} className={`p-2 sm:p-3 rounded-full transition-all ${activeTab === 'wallet' ? 'bg-green-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-            <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-<button onClick={() => setShowBroadcast(true)} className="p-2 sm:p-3 rounded-full bg-gray-900 text-white hover:bg-black transition-all">
-  <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
-</button>
-          <button onClick={() => setActiveTab('profile')} className={`p-2 sm:p-3 rounded-full transition-all ${activeTab === 'profile' ? 'bg-green-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-            <User className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
-      </div>
+<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div className="flex items-center gap-3 bg-blue-950/70 backdrop-blur-2xl px-4 py-3 rounded-full border border-blue-400/20 shadow-[0_15px_50px_rgba(0,0,0,0.45)]">
+
+    {/* Home */}
+    <button
+      onClick={() => setActiveTab('wallet')}
+      className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+        activeTab === 'wallet'
+          ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white p-3 scale-110 shadow-[0_0_25px_rgba(16,185,129,0.7)]'
+          : 'text-slate-300 hover:text-white hover:bg-slate-800 p-3'
+      }`}
+    >
+      <Wallet className="w-6 h-6" />
+    </button>
+
+    {/* Broadcast */}
+    <button
+      onClick={() => setShowBroadcast(true)}
+      className="
+        flex items-center justify-center
+        w-14 h-14
+        rounded-full
+        bg-gradient-to-r
+        from-green-500
+        to-emerald-600
+        text-white
+        shadow-[0_0_30px_rgba(16,185,129,0.8)]
+        hover:scale-110
+        transition-all
+        duration-300
+      "
+    >
+      <Plus className="w-7 h-7" />
+    </button>
+
+    {/* Profile */}
+    <button
+      onClick={() => setActiveTab('profile')}
+      className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+        activeTab === 'profile'
+          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 scale-110 shadow-[0_0_25px_rgba(16,185,129,0.7)]'
+          : 'text-slate-300 hover:text-white hover:bg-slate-800 p-3'
+      }`}
+    >
+      <User className="w-6 h-6" />
+    </button>
+
+  </div>
+</div>
 
       {/* AUTH MODAL */}
       {showAuthModal && (
@@ -308,7 +355,7 @@ console.log('Tips from DB:', tips)
             </div>
             <input type="number" placeholder="Amount KSh" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="w-full border-gray-300 rounded-xl p-2 sm:p-3 text-sm sm:text-base mb-3 focus:outline-none focus:ring-2 focus:ring-green-500" />
             <input type="text" placeholder="M-Pesa Phone 254..." value={depositPhone} onChange={e => setDepositPhone(e.target.value)} className="w-full border-gray-300 rounded-xl p-2 sm:p-3 text-sm sm:text-base mb-4 focus:outline-none focus:ring-2 focus:ring-green-500" />
-            <button onClick={handleDeposit} disabled={loading} className="w-full bg-green-500 text-white rounded-xl p-2 sm:p-3 text-sm sm:text-base font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={handleDeposit} disabled={loading} className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-lg rounded-xl p-2 sm:p-3 text-sm sm:text-base font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Deposit via M-Pesa'}
             </button>
           </div>

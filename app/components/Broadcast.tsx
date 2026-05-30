@@ -103,12 +103,23 @@ useEffect(() => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80">
       {/* KEY FIX: max-h-[90vh] + flex-col so it never stretches past screen */}
-      <div className="w-full max-w-2xl h-full max-h-[90vh] flex flex-col bg-gray-950 border-gray-800 rounded-2xl overflow-hidden">
+      <div className="
+  w-full 
+  max-w-2xl 
+  h-[95vh] 
+  sm:h-[90vh] 
+  flex flex-col 
+  bg-gray-950 
+  border border-gray-800 
+  rounded-2xl 
+  overflow-hidden
+  shadow-2xl
+">
 
         {/* Header - fixed, never scrolls */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-900 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-800 bg-gray-900/80 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-emerald-400" />
             <div>
@@ -131,10 +142,11 @@ useEffect(() => {
         )}
 
         {/* Form - this scrolls, but button stays visible */}
-        <form onSubmit={uploadTip} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={uploadTip} className="flex-1 overflow-y-auto scrollbar-none scrollbar-none-y-auto scrollbar-none
+         scrollbar-none scrollbar-none scrollbar-none scrollbar-none p-4 sm:p-6 space-y-6">
 
           {/* Bookmaker + League */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-2">Target Bookmaker</label>
               <div className="relative">
@@ -172,10 +184,10 @@ useEffect(() => {
             {/* KEY FIX: max-h-[200px] so matches scroll before form scrolls */}
             
 
-<div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-500/40 scrollbar-track-gray-900/50 rounded-xl border-gray-800/50">
+<div className="space-y-3 max-h-[160px] overflow-y-auto scrollbar-none scrollbar-none scrollbar-none scrollbar-none scrollbar-none scrollbar-none pr-2 scrollbar-thin scrollbar-thumb-emerald-500/40 scrollbar-track-gray-900/50 rounded-xl border-gray-800/50">
 
               {matches.map((m, i) => (
-                <div key={i} className="bg-gray-900 border-gray-800 rounded-xl p-4 space-y-3 mr-2">
+                <div key={i} className="bg-gray-900/70 border border-gray-800 rounded-2xl p-4 shadow-md hover:shadow-lg transition space-y-3 mr-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-gray-500 uppercase">Event {i + 1}</span>
                     {matches.length > 1 && (
@@ -283,7 +295,15 @@ useEffect(() => {
 
 
           {/* Submit - always visible because form scrolls */}
-          <div className="sticky bottom-0 pt-4 border-t border-gray-800 bg-gray-950 -mx-6 px-6 pb-6">
+          <div className="
+  sticky bottom-0 
+  pt-4 
+  border-t border-gray-800 
+  bg-gray-950/95 
+  backdrop-blur-md 
+  px-4 sm:px-6 
+  pb-4 sm:pb-6
+">
             <div className="flex justify-between items-center mb-4 p-3 bg-gray-900 rounded-lg">
               <div>
                 <p className="text-xs text-gray-400">Total Odds</p>
