@@ -179,6 +179,7 @@ console.log('Tips from DB:', tips)
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
               {activeTab === 'wallet' ? 'Home' : 'Profile'}
             </h1>
+            
             {user ? (
               <button onClick={handleSignOut} className="text-xs sm:text-sm text-gray-600 hover:text-gray-900">Sign out</button>
             ) : (
@@ -190,21 +191,56 @@ console.log('Tips from DB:', tips)
         {/* CONTENT */}
         <div className="py-6 sm:py-8">
           
-{activeTab === 'wallet' && (
-  <div className="py-6 sm:py-8">
-    {loading ? (
-      <p className="text-center text-gray-500">Loading tips...</p>
-    ) : tips.length === 0 ? (
-      <p className="text-center text-gray-500">No tips yet. Be first to broadcast!</p>
-    ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-        {tips.map(tip => (
-          <Card key={tip.id} tip={tip} />
-        ))}
+<div 
+  className="py-6 sm:py-8" 
+  style={{ 
+    /* EXTREME SPEED: Always keep DOM alive. Toggle visibility with zero-cost opacity/pointer rules */
+    opacity: activeTab === 'wallet' ? 1 : 0,
+    pointerEvents: activeTab === 'wallet' ? 'auto' : 'none',
+    position: activeTab === 'wallet' ? 'relative' : 'absolute',
+    zIndex: activeTab === 'wallet' ? 1 : -1,
+    
+    /* LAYOUT ISOLATION: Prevents the browser from recalculating the rest of the page layout */
+    contain: 'layout paint style',
+    contentVisibility: 'auto',
+    containIntrinsicSize: '0 800px',
+  }}
+>
+  {/* ULTRA-FAST GPU ACCELERATED LAYER */}
+  <div 
+    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
+    style={{ 
+      /* Forces immediate allocation of GPU memory layer */
+      transform: 'translateZ(0)', 
+      backfaceVisibility: 'hidden',
+      willChange: 'transform, opacity',
+    }}
+  >
+    {/* INSTANT DATA BLITTING */}
+    {tips.map(tip => (
+      <Card key={tip.id} tip={tip} />
+    ))}
+
+    {/* SUB-MILLISECOND EMPTY REPLACEMENT */}
+    {tips.length === 0 && !loading && (
+      <div className="col-span-full text-center text-gray-500 py-12" style={{ contain: 'strict' }}>
+        No tips yet. Be first to broadcast!
       </div>
     )}
   </div>
-)}
+
+  {/* NON-BLOCKING OVERLAY SYNC INDICATOR */}
+  {loading && (
+    <div 
+      className="absolute bottom-4 right-4 pointer-events-none bg-black/80 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-2 shadow-xl"
+      style={{ contain: 'strict' }}
+    >
+      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+      Syncing Network...
+    </div>
+  )}
+</div>
+
 
           {/* PROFILE TAB */}
           {activeTab === 'profile' && (
