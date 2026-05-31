@@ -83,13 +83,17 @@ export default function BettingTipCard({ tip }: { tip: TipData }) {
   const [paid, setPaid] = useState(false)
   const timerRef = useRef<HTMLSpanElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
-const [showMatches, setShowMatches] = useState(false)
+const [showMatches, setShowMatches] = useState(false) 
+
   // Memoize everything to avoid recalculating mathematical operations on parent state updates
   const meta = useMemo(() => {
     const duration = Number(tip.duration_hours?? tip.expiry_hours?? 24)
     const start = new Date(tip.created_at).getTime()
     const name = tip.company || tip.seller_name || "default"
     const brand = BRAND_STYLES[name as keyof typeof BRAND_STYLES] || BRAND_STYLES.default
+
+
+    
     return {
       expiresAt: start + (duration * 3600000),
       odds: Number(tip.odds || 0).toFixed(2),
@@ -121,6 +125,8 @@ useEffect(() => {
         if (cardNode) cardNode.style.display = 'none' // Instant layout removal without state lag
         return false
       }
+
+
 
       // Fast integer division via bitwise math operations
       const diffSecs = ((target - now) / 1000) | 0
@@ -196,7 +202,7 @@ opacity-30 pointer-events-none" />
 </div>
 
       {/* Center Odds & KSh Area */}
-      <div className="flex flex-col items-start z-9 mt-8">
+      <div className="flex flex-col items-start z-10 mt-8">
         <div className="flex items-baseline gap-1">
           <span
   className="

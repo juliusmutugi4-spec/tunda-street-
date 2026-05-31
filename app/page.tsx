@@ -188,23 +188,154 @@ console.log('Tips from DB:', tips)
   <div className="absolute bottom-0 right-0 w-72 h-72 bg-cyan-400/20 rounded-full blur-3xl" />
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white/10 backdrop-blur-2xl min-h-screen px-4 sm:px-6 border-x border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.35)] relative z-10">
 
-        {/* HEADER */}
-        <div className="sticky top-0 bg-blue-950/70 backdrop-blur-xl z-10 py-4 sm:py-5 border-b border-blue-400/20">
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
-              {activeTab === 'wallet' ? 'Home' : 'Profile'}
-            </h1>
-            
-            {user ? (
-              <button onClick={handleSignOut} className="text-xs sm:text-sm text-gray-600 hover:text-gray-900">Sign out</button>
-            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="text-xs sm:text-sm text-green-600 font-medium">Sign in</button>
-            )}
+{/* FLOATING TOP HEADER */}
+<div className="fixed top-0 left-1/2 -translate-x-1/2 z-[999] w-full max-w-2xl px-4 pt-4">
+  <div
+    className="
+      bg-slate-950/80
+      backdrop-blur-2xl
+      border border-cyan-500/20
+      rounded-3xl
+      px-4 py-4
+      shadow-[0_15px_50px_rgba(0,0,0,0.45)]
+    "
+  >
+    <div className="flex items-center justify-between">
+
+      {/* LEFT */}
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-400 font-bold">
+          Street Market
+        </p>
+
+        <h1 className="text-xl font-black text-white">
+          {activeTab === "wallet"
+            ? "Trading Feed"
+            : "Wallet Hub"}
+        </h1>
+      </div>
+
+      {/* RIGHT */}
+      <div className="flex items-center gap-3">
+
+        {user && (
+          <div
+            className="
+              hidden sm:flex
+              items-center gap-2
+              px-3 py-2
+              rounded-xl
+              bg-white/5
+              border border-white/10
+            "
+          >
+            <div
+              className="
+                w-2 h-2
+                rounded-full
+                bg-green-400
+                animate-pulse
+              "
+            />
+
+            <span className="text-xs text-slate-300">
+              Online
+            </span>
           </div>
+        )}
+
+        <button
+          onClick={
+            user
+              ? handleSignOut
+              : () => setShowAuthModal(true)
+          }
+          className="
+            px-4 py-2
+            rounded-xl
+            bg-gradient-to-r
+            from-cyan-500
+            to-blue-600
+            text-white
+            text-sm
+            font-bold
+            shadow-lg
+          "
+        >
+          {user ? "Logout" : "Sign In"}
+        </button>
+
+      </div>
+    </div>
+
+    {user && (
+      <div
+        className="
+          mt-4
+          grid
+          grid-cols-3
+          gap-2
+        "
+      >
+        <div
+          className="
+            rounded-xl
+            bg-white/5
+            border border-white/10
+            p-3
+          "
+        >
+          <p className="text-[10px] text-slate-500">
+            Balance
+          </p>
+
+          <p className="text-green-400 font-black">
+            KSh {wallet.balance.toLocaleString()}
+          </p>
         </div>
 
+        <div
+          className="
+            rounded-xl
+            bg-white/5
+            border border-white/10
+            p-3
+          "
+        >
+          <p className="text-[10px] text-slate-500">
+            Escrow
+          </p>
+
+          <p className="text-yellow-400 font-black">
+            KSh {wallet.escrow_balance.toLocaleString()}
+          </p>
+        </div>
+
+        <div
+          className="
+            rounded-xl
+            bg-white/5
+            border border-white/10
+            p-3
+          "
+        >
+          <p className="text-[10px] text-slate-500">
+            Active Tips
+          </p>
+
+          <p className="text-cyan-400 font-black">
+            {tips.length}
+          </p>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+
+
         {/* CONTENT */}
-        <div className="py-6 sm:py-8">
+        <div className="pt-40 pb-8">
           
 <div className="py-6 sm:py-8" style={{
   display: activeTab === 'wallet' ? 'block' : 'none'
@@ -243,16 +374,91 @@ console.log('Tips from DB:', tips)
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{user?.email || 'Not signed in'}</p>
               </div>
 
-              {/* Balance card */}
-              <div className="bg-green-50 rounded-xl p-4 sm:p-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Available Balance</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1">KSh {wallet.balance.toFixed(2)}</p>
-                  </div>
-                  <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
-                </div>
-              </div>
+{/* PREMIUM WALLET HEADER */}
+<div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-950 p-6 shadow-[0_0_40px_rgba(34,211,238,0.15)]">
+
+  {/* Glow Effects */}
+  <div className="absolute -top-20 -right-20 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl" />
+  <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl" />
+
+  <div className="relative z-10">
+
+    {/* Top Row */}
+    <div className="flex justify-between items-start">
+
+      <div>
+        <p className="text-cyan-300 text-xs tracking-[0.25em] uppercase font-bold">
+          Wallet Balance
+        </p>
+
+        <h2 className="text-white text-4xl font-black mt-2">
+          KSh {wallet.balance.toLocaleString()}
+        </h2>
+
+        <p className="text-slate-400 text-sm mt-2">
+          Available for withdrawal
+        </p>
+      </div>
+
+      <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+        <Wallet className="w-7 h-7 text-cyan-300" />
+      </div>
+
+    </div>
+
+    {/* Stats */}
+    <div className="grid grid-cols-2 gap-3 mt-6">
+
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p className="text-slate-400 text-xs">
+          Escrow
+        </p>
+
+        <p className="text-yellow-400 font-black text-xl mt-1">
+          KSh {wallet.escrow_balance.toLocaleString()}
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p className="text-slate-400 text-xs">
+          Account
+        </p>
+
+        <p className="text-emerald-400 font-black text-sm mt-2 truncate">
+          {user?.email || "Guest"}
+        </p>
+      </div>
+
+    </div>
+
+    {/* Quick Actions */}
+    <div className="grid grid-cols-3 gap-2 mt-6">
+
+      <button
+        onClick={() => setShowDepositModal(true)}
+        className="rounded-xl bg-emerald-500 py-3 text-white font-bold text-sm hover:scale-105 transition"
+      >
+        Deposit
+      </button>
+
+      <button
+        onClick={() => setShowWithdrawModal(true)}
+        className="rounded-xl bg-blue-500 py-3 text-white font-bold text-sm hover:scale-105 transition"
+      >
+        Withdraw
+      </button>
+
+      <button
+        onClick={() => setShowSendModal(true)}
+        className="rounded-xl bg-cyan-500 py-3 text-white font-bold text-sm hover:scale-105 transition"
+      >
+        Send
+      </button>
+
+    </div>
+
+  </div>
+</div>
 
               {/* Action buttons */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
