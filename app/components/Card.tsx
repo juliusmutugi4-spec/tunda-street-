@@ -2,6 +2,12 @@
 import { useState, useEffect, useMemo, useRef } from "react"
 import { Lock, Clock, Sparkles, ShieldCheck } from "lucide-react"
 import { createPortal } from "react-dom"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 // ATOMIC CONSTANTS: Pre-compiled styling classes to save CPU cycles from string concatenation during map loops
 const BRAND_STYLES = {
   SportPesa: {
@@ -45,6 +51,7 @@ interface TipData {
   id?: string | number
   company?: string
   seller_name?: string
+  profile_photo?: string
   created_at: string | number | Date
 
   duration_hours?: number
@@ -66,7 +73,13 @@ interface TipData {
   }[]
 }
 
+
+
+
 export default function BettingTipCard({ tip }: { tip: TipData }) {
+  const [profilePhoto, setProfilePhoto] = useState(
+  tip.profile_photo || "/avatar.png"
+)
   const [paid, setPaid] = useState(false)
   const timerRef = useRef<HTMLSpanElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -274,9 +287,15 @@ opacity-30 pointer-events-none" />
 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h3 className="text-cyan-300 font-bold text-lg">
-          Tip Details
-        </h3>
+<div>
+  <h3 className="text-cyan-300 text-lg font-black">
+    Premium Slip
+  </h3>
+
+  <p className="text-slate-500 text-xs">
+    Match Analysis & Seller Profile
+  </p>
+</div>
 
         <button
           onClick={() => setShowMatches(false)}
@@ -287,7 +306,12 @@ opacity-30 pointer-events-none" />
       </div>
 
       {/* TWO COLUMNS */}
-      <div className="grid md:grid-cols-[2fr_1fr] h-[calc(100vh-70px)]">
+      <div className="
+  grid
+  grid-cols-1
+  md:grid-cols-[2fr_1fr]
+  h-[calc(100vh-70px)]
+">
 
         {/* LEFT SIDE - MATCHES */}
         <div className="overflow-y-auto p-4 space-y-3">
@@ -338,23 +362,145 @@ opacity-30 pointer-events-none" />
         </div>
 
         {/* RIGHT SIDE - PROFILE */}
-        <div className="border-l border-white/10 p-6">
+<div className="
+  border-l border-white/10
+  bg-gradient-to-b
+  from-cyan-950/20
+  to-transparent
+  p-6
+">
 
-          <div className="flex flex-col items-center">
+  <div className="sticky top-0 flex flex-col items-center">
 
-            <img
-              src="/avatar.png"
-              alt="Tipster"
-              className="w-24 h-24 rounded-full border-2 border-cyan-500 object-cover"
-            />
+<div className="relative group">
 
-            <h2 className="mt-4 text-white font-bold text-lg">
-              {tip.seller_name}
-            </h2>
+ <img
+  src={profilePhoto}
+    alt="Tipster"
+    className="
+      w-28 h-28
+      rounded-full
+      border-2 border-cyan-500
+      object-cover
+      shadow-[0_0_25px_rgba(34,211,238,0.25)]
+    "
+  />
+<input
+  id={`profile-upload-${tip.id}`}
+  type="file"
+  accept="image/*"
+  className="hidden"
+onChange={async (e) => {
+  const file = e.target.files?.[0]
 
-            <span className="text-cyan-400 text-sm">
-              Verified Tipster
-            </span>
+  if (!file) return
+
+  const fileName = `${Date.now()}-${file.name}`
+
+  const { error: uploadError } = await supabase.storage
+    .from("profile-photos")
+    .upload(fileName, file)
+
+  if (uploadError) {
+    console.error(uploadError)
+    alert("Upload failed")
+    return
+  }
+
+  const { data } = supabase.storage
+    .from("profile-photos")
+    .getPublicUrl(fileName)
+
+  const photoUrl = data.publicUrl
+
+  setProfilePhoto(photoUrl)
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) return
+
+  await supabase
+    .from("betting_tips")
+    .update({
+      profile_photo: photoUrl
+    })
+    .eq("seller_name", user.email)
+}}
+/>
+
+
+  {/* Online */}
+  <div className="
+    absolute bottom-2 right-2
+    w-4 h-4
+    rounded-full
+    bg-green-500
+    border-2 border-black
+  " />
+
+  {/* Upload Photo Button */}
+<button
+  onClick={() =>
+    document
+      .getElementById(`profile-upload-${tip.id}`)
+      ?.click()
+  }
+  className="
+    absolute
+    -bottom-1
+    -right-1
+    w-8 h-8
+    rounded-full
+    bg-cyan-500
+    text-black
+    font-black
+    text-lg
+    shadow-lg
+    hover:scale-110
+    transition
+    cursor-pointer
+  "
+>
+  +
+</button>
+</div>
+
+<h2 className="
+  mt-4
+  text-white
+  font-black
+  text-xl
+  tracking-wide
+">
+  {tip.seller_name || "Verified Tipster"}
+</h2>
+
+<span className="mt-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">
+  ✓ VERIFIED TIPSTER
+</span>
+
+<div className="grid grid-cols-3 gap-2 w-full mt-4">
+
+  <div className="bg-white/5 rounded-lg p-2 text-center">
+    <p className="text-green-400 font-black text-lg">
+  92%
+</p>
+    <p className="text-[10px] text-slate-400">Win Rate</p>
+  </div>
+
+  <div className="bg-white/5 rounded-lg p-2 text-center">
+    <p className="text-cyan-400 font-black">124</p>
+    <p className="text-[10px] text-slate-400">Tips</p>
+  </div>
+
+  <div className="bg-white/5 rounded-lg p-2 text-center">
+    <p className="text-yellow-400 font-black">VIP</p>
+    <p className="text-[10px] text-slate-400">Level</p>
+  </div>
+
+</div>
 
             <div className="mt-6 w-full space-y-3">
 
