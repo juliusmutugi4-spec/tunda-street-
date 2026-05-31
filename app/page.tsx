@@ -27,7 +27,7 @@ export default function StreetMarket() {
   const [authSuccess, setAuthSuccess] = useState('')
 
   // Modals
-  
+  const [showUI, setShowUI] = useState(true)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
@@ -101,7 +101,35 @@ const fetchTips = async () => {
     }
   }
 
+useEffect(() => {
+  let lastScrollY = window.scrollY
+  let timeout: NodeJS.Timeout
 
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY
+
+    if (currentScrollY > lastScrollY) {
+      setShowUI(false)
+    } else {
+      setShowUI(true)
+    }
+
+    clearTimeout(timeout)
+
+    timeout = setTimeout(() => {
+      setShowUI(true)
+    }, 150)
+
+    lastScrollY = currentScrollY
+  }
+
+  window.addEventListener("scroll", handleScroll)
+
+  return () => {
+    window.removeEventListener("scroll", handleScroll)
+    clearTimeout(timeout)
+  }
+}, [])
   // Auth listener
 useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -191,6 +219,7 @@ console.log('Tips from DB:', tips)
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white/10 backdrop-blur-2xl min-h-screen px-4 sm:px-6 border-x border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.35)]">
 
 <Header
+  showUI={showUI}
   activeTab={activeTab}
   user={user}
   wallet={wallet}
@@ -198,7 +227,6 @@ console.log('Tips from DB:', tips)
   handleSignOut={handleSignOut}
   openAuth={() => setShowAuthModal(true)}
 />
-
 
         {/* CONTENT */}
     <main className="pt-52 pb-32">
@@ -349,7 +377,15 @@ console.log('Tips from DB:', tips)
 
 
       {/* 3 BOTTOM BUTTONS - responsive */}
-<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+<div
+  className={`
+    fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+    transition-all duration-300
+    ${showUI
+      ? "translate-y-0 opacity-100"
+      : "translate-y-24 opacity-0 pointer-events-none"}
+  `}
+>
   <div className="flex items-center gap-3 bg-blue-950/70 backdrop-blur-2xl px-4 py-3 rounded-full border border-blue-400/20 shadow-[0_15px_50px_rgba(0,0,0,0.45)]">
 
     {/* Home */}

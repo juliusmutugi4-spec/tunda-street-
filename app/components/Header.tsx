@@ -1,5 +1,6 @@
 "use client"
 interface HeaderProps {
+  showUI: boolean
   activeTab: "wallet" | "profile"
   user: any
   wallet: {
@@ -12,6 +13,7 @@ interface HeaderProps {
 }
 
 export default function Header({
+  showUI,
   activeTab,
   user,
   wallet,
@@ -20,7 +22,18 @@ export default function Header({
   openAuth
 }: HeaderProps) {
   return (
-    <header className="sticky top-4 z-50 w-[95%] max-w-2xl mx-auto">
+    <header
+  className={`
+    fixed top-4 left-1/2 -translate-x-1/2
+    z-[9999] w-[95%] max-w-2xl
+    transition-all duration-300
+    ${
+      showUI
+        ? "opacity-100"
+        : "opacity-0 -translate-y-10 pointer-events-none"
+    }
+  `}
+>
       <div
   className="
     bg-black/70
