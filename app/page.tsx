@@ -45,14 +45,18 @@ const [tips, setTips] = useState<any[]>([])
   }
 const fetchTips = async () => {
   setLoading(true)
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from('betting_tips')
     .select('*')
     .order('created_at', { ascending: false })
+
+  console.log("BETTING TIPS:", data)
+  console.log("ERROR:", error)
+
   setTips(data || [])
   setLoading(false)
 }
-
 
 
   const closeAuthModal = () => {
@@ -98,17 +102,28 @@ const fetchTips = async () => {
 
 
   // Auth listener
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(session?.user ?? null)
+console.log(tips)
+    if (session?.user) {
+      fetchWallet(session.user.id)
+    }
+  })
+
+  fetchTips() // ← ADD THIS LINE
+
+  const { data: { subscription } } =
+    supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchWallet(session.user.id)
+
+      if (session?.user) {
+        fetchWallet(session.user.id)
+      }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchWallet(session.user.id)
-    })
-    return () => subscription?.unsubscribe()
-  }, [])
+
+  return () => subscription?.unsubscribe()
+}, [])
 
   const fetchWallet = async (userId: string) => {
     const { data } = await supabase

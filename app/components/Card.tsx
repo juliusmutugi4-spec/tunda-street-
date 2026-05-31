@@ -46,16 +46,23 @@ interface TipData {
   company?: string
   seller_name?: string
   created_at: string | number | Date
+
   duration_hours?: number
   expiry_hours?: number
+
   price: number | string
   odds: number | string
+
   slip_link?: string
+
+  match?: any
   matches?: number
 
-  match_list?: {
+  slip_details?: {
     home: string
     away: string
+    odds: string
+    tip: string
   }[]
 }
 
@@ -82,6 +89,9 @@ useEffect(() => {
   console.log("start:", new Date(tip.created_at).getTime())
   console.log("expires:", meta.expiresAt)
 }, [])
+useEffect(() => {
+  console.log("SLIP DETAILS JSON:", JSON.stringify(tip.slip_details, null, 2))
+}, [tip])
 useEffect(() => {
   console.log(tip)
 }, [tip])
@@ -199,24 +209,24 @@ opacity-30 pointer-events-none" />
   </p>
 
 <div className="ml-auto flex-shrink-0">
-  <button
-    onClick={() => setShowMatches(true)}
-    className="
-      ml-auto mr-1
-      px-2 py-0.5
-      text-[10px]
-      font-black
-      rounded-md
-      bg-cyan-500/10
-      text-cyan-300
-      border border-cyan-500/20
-      hover:bg-cyan-500/20
-      transition
-      cursor-pointer
-    "
-  >
-    {tip.matches ?? 0}M
-  </button>
+<button
+  onClick={() => setShowMatches(true)}
+  className="
+    ml-auto mr-1
+    px-2 py-0.5
+    text-[10px]
+    font-black
+    rounded-md
+    bg-cyan-500/10
+    text-cyan-300
+    border border-cyan-500/20
+    hover:bg-cyan-500/20
+    transition
+    cursor-pointer
+  "
+>
+  {tip.slip_details?.length ?? 0}M
+</button>
 </div>
 </div>
       </div>
@@ -258,45 +268,137 @@ opacity-30 pointer-events-none" />
 <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-purple-500/10 blur-3xl" />
 
     </article>
-    {showMatches &&
-      createPortal(
-        <div className="fixed inset-0 z-[999999] bg-black/95 backdrop-blur-md">
-          <div className="flex items-center justify-between p-4 border-b border-white/10">
-            <h3 className="text-cyan-300 font-bold text-lg">
-              Matches ({tip.matches ?? 0})
-            </h3>
+{showMatches &&
+  createPortal(
+    <div className="fixed inset-0 z-[999999] bg-black/95 backdrop-blur-md">
 
-            <button
-              onClick={() => setShowMatches(false)}
-              className="text-red-400 text-2xl font-bold"
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <h3 className="text-cyan-300 font-bold text-lg">
+          Tip Details
+        </h3>
+
+        <button
+          onClick={() => setShowMatches(false)}
+          className="text-red-400 text-2xl font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* TWO COLUMNS */}
+      <div className="grid md:grid-cols-[2fr_1fr] h-[calc(100vh-70px)]">
+
+        {/* LEFT SIDE - MATCHES */}
+        <div className="overflow-y-auto p-4 space-y-3">
+
+          {tip.slip_details?.map((match, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-cyan-500/20 bg-white/5 p-4"
             >
-              ✕
-            </button>
-          </div>
-
-          <div className="p-4 space-y-3 overflow-y-auto h-[calc(100vh-70px)]">
-            {tip.match_list?.map((match, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-xl bg-white/5 border border-white/10"
-              >
-                <div className="text-white font-bold">
+              <div className="flex justify-between">
+                <span className="font-bold text-white">
                   {match.home}
-                </div>
+                </span>
 
-                <div className="text-center text-cyan-400 py-2">
+                <span className="text-cyan-400 text-xs">
                   VS
-                </div>
+                </span>
 
-                <div className="text-white font-bold">
+                <span className="font-bold text-white">
                   {match.away}
-                </div>
+                </span>
               </div>
-            ))}
+
+              <div className="h-px bg-white/10 my-3" />
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">
+                  Odds
+                </span>
+
+                <span className="text-green-400 font-black">
+                  @{match.odds}
+                </span>
+              </div>
+
+              <div className="flex justify-between mt-2">
+                <span className="text-slate-400">
+                  Prediction
+                </span>
+
+                <span className="text-cyan-300 font-black">
+                  {paid ? match.tip : "🔒 Hidden"}
+                </span>
+              </div>
+            </div>
+          ))}
+
+        </div>
+
+        {/* RIGHT SIDE - PROFILE */}
+        <div className="border-l border-white/10 p-6">
+
+          <div className="flex flex-col items-center">
+
+            <img
+              src="/avatar.png"
+              alt="Tipster"
+              className="w-24 h-24 rounded-full border-2 border-cyan-500 object-cover"
+            />
+
+            <h2 className="mt-4 text-white font-bold text-lg">
+              {tip.seller_name}
+            </h2>
+
+            <span className="text-cyan-400 text-sm">
+              Verified Tipster
+            </span>
+
+            <div className="mt-6 w-full space-y-3">
+
+              <div className="rounded-lg bg-white/5 p-3">
+                <p className="text-slate-400 text-xs">
+                  Company
+                </p>
+
+                <p className="text-white font-bold">
+                  {tip.company}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-white/5 p-3">
+                <p className="text-slate-400 text-xs">
+                  Odds
+                </p>
+
+                <p className="text-green-400 font-bold">
+                  @{tip.odds}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-white/5 p-3">
+                <p className="text-slate-400 text-xs">
+                  Price
+                </p>
+
+                <p className="text-yellow-400 font-bold">
+                  KSh {tip.price}
+                </p>
+              </div>
+
+            </div>
+
           </div>
-        </div>,
-        document.body
-      )}
+
+        </div>
+
+      </div>
+
+    </div>,
+    document.body
+  )}
   </>
 )
 
