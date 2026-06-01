@@ -1,12 +1,13 @@
-"use client"
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Menu, Search, Bell } from 'lucide-react'
+
 interface HeaderProps {
   showUI: boolean
   activeTab: "wallet" | "profile"
   user: any
-  wallet: {
-    balance: number
-    escrow_balance: number
-  }
+  wallet: { balance: number; escrow_balance: number }
   tipsCount: number
   handleSignOut: () => void
   openAuth: () => void
@@ -21,119 +22,93 @@ export default function Header({
   handleSignOut,
   openAuth
 }: HeaderProps) {
-  return (
-    <header
-  className={`
-    fixed top-4 left-1/2 -translate-x-1/2
-    z-[9999] w-[95%] max-w-2xl
-    transition-all duration-300
-    ${
-      showUI
-        ? "opacity-100"
-        : "opacity-0 -translate-y-10 pointer-events-none"
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      if (currentScrollY > lastScrollY && currentScrollY > 60) {
+        setIsVisible(false)
+      } else {
+        setIsVisible(true)
+      }
+      setLastScrollY(currentScrollY)
     }
-  `}
->
-      <div
-  className="
-    bg-black/70
-    backdrop-blur-2xl
-    border border-red-600/30
-    rounded-3xl
-    shadow-[0_15px_50px_rgba(0,0,0,0.55)]
-    overflow-hidden
-  "
->
 
-        {/* Red glow line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
 
-        <div className="max-w-2xl mx-auto px-5 py-4">
-
+  return (
+    
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
+        isVisible && showUI? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
+      {/* Top bar - solid bg + blur for scroll-under effect */}
+      <div className="bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 shadow-lg">
+        <div className="max-w-2xl mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between">
-
-            {/* LEFT */}
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-red-500 font-bold">
-                STREET MARKET
-              </p>
-
-              <h1 className="text-2xl font-black text-white">
-                {activeTab === "wallet"
-                  ? "Trading Feed"
-                  : "Wallet Hub"}
+            {/* Left: Menu + Logo */}
+            <div className="flex items-center gap-3">
+              <button className="text-zinc-400 hover:text-white">
+                <Menu size={24} />
+              </button>
+              <h1 className="text-xl font-black">
+                <span className="text-yellow-400">STREET</span>
+                <span className="text-white">MARKET</span>
               </h1>
             </div>
 
-            {/* RIGHT */}
+            {/* Right: Actions */}
             <div className="flex items-center gap-3">
-
               {user && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-zinc-900 border border-zinc-800">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs text-zinc-300">
-                    Online
-                  </span>
-                </div>
+                <button
+                  onClick={openAuth}
+                  className="px-4 py-1.5 rounded-md bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-sm shadow-[0_0_20px_rgba(250,204,21,0.3)]"
+                >
+                  Deposit
+                </button>
               )}
-
-              <button
-                onClick={user ? handleSignOut : openAuth}
-                className="
-                  px-4 py-2
-                  rounded-xl
-                  bg-red-600
-                  hover:bg-red-500
-                  text-white
-                  text-sm
-                  font-bold
-                  transition
-                "
-              >
-                {user ? "Logout" : "Sign In"}
+              <button className="text-zinc-400 hover:text-white">
+                <Search size={22} />
               </button>
-
+              <button className="text-zinc-400 hover:text-white relative">
+                <Bell size={22} />
+                {tipsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text- font-bold text-white flex items-center justify-center">
+                    {tipsCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
-
-          {user && (
-            <div className="grid grid-cols-3 gap-3 mt-4">
-
-              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-                <p className="text-[10px] text-zinc-500">
-                  Balance
-                </p>
-                <p className="text-green-400 font-black">
-                  KSh {wallet.balance.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-                <p className="text-[10px] text-zinc-500">
-                  Escrow
-                </p>
-                <p className="text-yellow-400 font-black">
-                  KSh {wallet.escrow_balance.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-                <p className="text-[10px] text-zinc-500">
-                  Active Tips
-                </p>
-                <p className="text-red-400 font-black">
-                  {tipsCount}
-                </p>
-              </div>
-
-            </div>
-          )}
-
         </div>
-
-        
-
       </div>
+
+      {/* Stats bar - only when logged in */}
+      {user && (
+        <div className="bg-black/95 backdrop-blur-xl border-b border-zinc-800">
+          <div className="max-w-2xl mx-auto px-4 py-2">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text- text-zinc-500">Balance</p>
+                <p className="text-green-400 font-bold text-sm">KSh {wallet.balance.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text- text-zinc-500">Escrow</p>
+                <p className="text-yellow-400 font-bold text-sm">KSh {wallet.escrow_balance.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text- text-zinc-500">Active Tips</p>
+                <p className="text-red-400 font-bold text-sm">{tipsCount}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

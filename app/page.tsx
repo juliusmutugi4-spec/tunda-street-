@@ -27,7 +27,8 @@ export default function StreetMarket() {
   const [authSuccess, setAuthSuccess] = useState('')
 
   // Modals
-  const [showUI, setShowUI] = useState(true)
+    const [showHeader, setShowHeader] = useState(true)  // for header
+  const [showBottomNav, setShowBottomNav] = useState(false)  // for bottom nav
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
@@ -103,32 +104,34 @@ const fetchTips = async () => {
 
 useEffect(() => {
   let lastScrollY = window.scrollY
-  let timeout: NodeJS.Timeout
+  let ticking = false
 
   const handleScroll = () => {
-    const currentScrollY = window.scrollY
-
-    if (currentScrollY > lastScrollY) {
-      setShowUI(false)
-    } else {
-      setShowUI(true)
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY
+        const scrollingDown = currentScrollY > lastScrollY
+        
+        // SCROLL UP = SHOW
+        if (!scrollingDown || currentScrollY < 60) {
+          setShowHeader(true)
+          setShowBottomNav(true)
+        } 
+        // SCROLL DOWN = HIDE after 80px
+        else if (scrollingDown && currentScrollY > 80) {
+          setShowHeader(false)
+          setShowBottomNav(false)
+        }
+        
+        lastScrollY = currentScrollY
+        ticking = false
+      })
+      ticking = true
     }
-
-    clearTimeout(timeout)
-
-    timeout = setTimeout(() => {
-      setShowUI(true)
-    }, 150)
-
-    lastScrollY = currentScrollY
   }
 
-  window.addEventListener("scroll", handleScroll)
-
-  return () => {
-    window.removeEventListener("scroll", handleScroll)
-    clearTimeout(timeout)
-  }
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  return () => window.removeEventListener('scroll', handleScroll)
 }, [])
   // Auth listener
 useEffect(() => {
@@ -219,7 +222,7 @@ console.log('Tips from DB:', tips)
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white/10 backdrop-blur-2xl min-h-screen px-4 sm:px-6 border-x border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.35)]">
 
 <Header
-  showUI={showUI}
+  showUI={showHeader}
   activeTab={activeTab}
   user={user}
   wallet={wallet}
@@ -229,20 +232,20 @@ console.log('Tips from DB:', tips)
 />
 
         {/* CONTENT */}
-    <main className="pt-52 pb-32">
+    <main className="pt-[110px] pb-32 min-h-screen bg-zinc-900">
 
 <div className="py-6 sm:py-8" style={{
   display: activeTab === 'wallet' ? 'block' : 'none'
 }}>
   {/* 2 cards on phone, 3 tablet, 4 desktop */}
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 px-4">
     {tips.map(tip => (
       <Card key={tip.id} tip={tip} />
     ))}
     
     {/* Empty state */}
     {tips.length === 0 && !loading && (
-      <div className="col-span-2 text-center text-gray-500 py-12">
+     <div className="col-span-full text-center text-gray-500 py-12">
         No tips yet. Be first to broadcast!
       </div>
     )}
@@ -377,15 +380,10 @@ console.log('Tips from DB:', tips)
 
 
       {/* 3 BOTTOM BUTTONS - responsive */}
-<div
-  className={`
-    fixed bottom-6 left-1/2 -translate-x-1/2 z-50
-    transition-all duration-300
-    ${showUI
-      ? "translate-y-0 opacity-100"
-      : "translate-y-24 opacity-0 pointer-events-none"}
-  `}
->
+<div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
+  showBottomNav ? "translate-y-0 opacity-100 scale-100" : "translate-y-24 opacity-0 scale-95 pointer-events-none"
+}`}>
+
   <div className="flex items-center gap-3 bg-blue-950/70 backdrop-blur-2xl px-4 py-3 rounded-full border border-blue-400/20 shadow-[0_15px_50px_rgba(0,0,0,0.45)]">
 
     {/* Home */}
