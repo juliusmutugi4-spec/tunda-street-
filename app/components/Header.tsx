@@ -1,110 +1,151 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Menu, Search, Bell } from 'lucide-react'
+import { Menu, Search, Bell, Wallet } from "lucide-react"
 
 interface HeaderProps {
-  showUI: boolean
   activeTab: "wallet" | "profile"
   user: any
-  wallet: { balance: number; escrow_balance: number }
+  wallet: {
+    balance: number
+    escrow_balance: number
+  }
   tipsCount: number
   handleSignOut: () => void
   openAuth: () => void
 }
 
 export default function Header({
-  showUI,
-  activeTab,
   user,
   wallet,
   tipsCount,
-  handleSignOut,
-  openAuth
+  openAuth,
 }: HeaderProps) {
-  const [isVisible, setIsVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      if (currentScrollY > lastScrollY && currentScrollY > 60) {
-        setIsVisible(false)
-      } else {
-        setIsVisible(true)
-      }
-      setLastScrollY(currentScrollY)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY])
-
   return (
-    
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
-        isVisible && showUI? "translate-y-0" : "-translate-y-full"
-      }`}
-    >
-      {/* Top bar - solid bg + blur for scroll-under effect */}
-      <div className="bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 shadow-lg">
-        <div className="max-w-2xl mx-auto px-4 py-2.5">
-          <div className="flex items-center justify-between">
-            {/* Left: Menu + Logo */}
-            <div className="flex items-center gap-3">
-              <button className="text-zinc-400 hover:text-white">
-                <Menu size={24} />
-              </button>
-              <h1 className="text-xl font-black">
-                <span className="text-yellow-400">STREET</span>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Main Header */}
+      <div className="backdrop-blur-xl bg-black/50 border-b border-white/10">
+        <div className="h-16 px-4 flex items-center justify-between max-w-7xl mx-auto">
+
+          {/* Left */}
+          <div className="flex items-center gap-3">
+            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
+              <Menu size={20} className="text-white" />
+            </button>
+
+            <div>
+              <h1 className="font-black text-lg tracking-tight">
+                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                  STREET
+                </span>
                 <span className="text-white">MARKET</span>
               </h1>
-            </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-3">
-              {user && (
-                <button
-                  onClick={openAuth}
-                  className="px-4 py-1.5 rounded-md bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-sm shadow-[0_0_20px_rgba(250,204,21,0.3)]"
-                >
-                  Deposit
-                </button>
-              )}
-              <button className="text-zinc-400 hover:text-white">
-                <Search size={22} />
-              </button>
-              <button className="text-zinc-400 hover:text-white relative">
-                <Bell size={22} />
-                {tipsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text- font-bold text-white flex items-center justify-center">
-                    {tipsCount}
-                  </span>
-                )}
-              </button>
+              <p className="text-[10px] text-zinc-400 uppercase tracking-widest">
+                Trade • Predict • Win
+              </p>
             </div>
+          </div>
+
+          {/* Right */}
+          <div className="flex items-center gap-2">
+
+            {user && (
+              <button
+                onClick={openAuth}
+                className="
+                  bg-gradient-to-r
+                  from-yellow-400
+                  to-amber-500
+                  text-black
+                  font-bold
+                  px-4
+                  py-2
+                  rounded-xl
+                  shadow-lg
+                  hover:scale-105
+                  transition-all
+                "
+              >
+                Deposit
+              </button>
+            )}
+
+            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
+              <Search size={18} className="text-white" />
+            </button>
+
+            <button className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
+              <Bell size={18} className="text-white" />
+
+              {tipsCount > 0 && (
+                <span className="
+                  absolute
+                  -top-1
+                  -right-1
+                  min-w-[18px]
+                  h-[18px]
+                  px-1
+                  rounded-full
+                  bg-red-500
+                  text-white
+                  text-[10px]
+                  font-bold
+                  flex
+                  items-center
+                  justify-center
+                  animate-pulse
+                ">
+                  {tipsCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Stats bar - only when logged in */}
+      {/* Wallet Bar */}
       {user && (
-        <div className="bg-black/95 backdrop-blur-xl border-b border-zinc-800">
-          <div className="max-w-2xl mx-auto px-4 py-2">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text- text-zinc-500">Balance</p>
-                <p className="text-green-400 font-bold text-sm">KSh {wallet.balance.toLocaleString()}</p>
+        <div className="backdrop-blur-xl bg-black/40 border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+
+            <div className="grid grid-cols-3 gap-3">
+
+              {/* Balance */}
+              <div className="rounded-2xl bg-white/5 border border-green-500/20 p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet size={14} className="text-green-400" />
+                  <span className="text-zinc-400 text-xs">
+                    Balance
+                  </span>
+                </div>
+
+                <p className="font-bold text-green-400 text-sm">
+                  KSh {wallet.balance.toLocaleString()}
+                </p>
               </div>
-              <div>
-                <p className="text- text-zinc-500">Escrow</p>
-                <p className="text-yellow-400 font-bold text-sm">KSh {wallet.escrow_balance.toLocaleString()}</p>
+
+              {/* Escrow */}
+              <div className="rounded-2xl bg-white/5 border border-yellow-500/20 p-3">
+                <p className="text-zinc-400 text-xs mb-1">
+                  Escrow
+                </p>
+
+                <p className="font-bold text-yellow-400 text-sm">
+                  KSh {wallet.escrow_balance.toLocaleString()}
+                </p>
               </div>
-              <div>
-                <p className="text- text-zinc-500">Active Tips</p>
-                <p className="text-red-400 font-bold text-sm">{tipsCount}</p>
+
+              {/* Active Tips */}
+              <div className="rounded-2xl bg-white/5 border border-red-500/20 p-3">
+                <p className="text-zinc-400 text-xs mb-1">
+                  Active Tips
+                </p>
+
+                <p className="font-bold text-red-400 text-sm">
+                  {tipsCount}
+                </p>
               </div>
+
             </div>
           </div>
         </div>
