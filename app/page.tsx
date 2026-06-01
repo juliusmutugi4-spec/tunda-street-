@@ -178,7 +178,7 @@ console.log('Tips from DB:', tips)
 
   }
 return (
-  <div className="relative min-h-screen w-full overflow-x-hidden h-screen overflow-hidden"
+  <div className="relative min-h-screen w-full overflow-x-hidden"
     style={{
       background: `radial-gradient(circle at top left, rgba(59,130,246,0.25), transparent 35%),
                  radial-gradient(circle at bottom right, rgba(37,99,235,0.25), transparent 35%),
@@ -188,7 +188,16 @@ return (
     <div className="absolute top-0 left-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl" />
     <div className="absolute bottom-0 right-0 w-72 h-72 bg-cyan-400/20 rounded-full blur-3xl" />
 
-    <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto bg-white/10 backdrop-blur-2xl min-h-screen px-4 sm:px-6 border-x border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.35)] h-full">
+<div
+  className="
+    mx-auto
+    max-w-2xl
+    min-h-screen
+    bg-slate-900
+    border-x
+    border-slate-800
+  "
+>
       <Header
         activeTab={activeTab}
         user={user}
