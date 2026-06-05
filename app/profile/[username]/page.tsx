@@ -10,7 +10,7 @@ export default function ProfilePage() {
   decodeURIComponent(params.username as string)
     .trim()
     .toLowerCase()
-
+const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [profile, setProfile] = useState<any>(null)
   const [posts, setPosts] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -116,23 +116,49 @@ const loadProfile = async () => {
 const saveProfile = async () => {
   const username = newUsername.trim().toLowerCase()
 
-const { data: existing } = await supabase
-  .from('profiles')
-  .select('id')
-  .eq('username', username)
-  .neq('id', profile.id)
-  .maybeSingle()
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .neq('id', profile.id)
+    .maybeSingle()
 
-if (existing) {
-  alert('Username already taken')
-  return
-}
+  if (existing) {
+    alert('Username already taken')
+    return
+  }
+
+  let avatar_url = profile.avatar_url
+
+  if (avatarFile) {
+    const fileExt = avatarFile.name.split('.').pop()
+
+    const fileName =
+      `${profile.id}-${Date.now()}.${fileExt}`
+
+    const { error: uploadError } =
+      await supabase.storage
+        .from('avatars')
+        .upload(fileName, avatarFile)
+
+    if (uploadError) {
+      alert(uploadError.message)
+      return
+    }
+
+    const { data } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName)
+
+    avatar_url = data.publicUrl
+  }
 
   const { error } = await supabase
     .from('profiles')
     .update({
       username,
       bio: newBio,
+      avatar_url,
     })
     .eq('id', profile.id)
 
@@ -141,26 +167,17 @@ if (existing) {
     return
   }
 
-  await supabase
-    .from('posts')
-    .update({
-      username,
-    })
-    .eq('user_id', profile.id)
+  setProfile({
+    ...profile,
+    username,
+    bio: newBio,
+    avatar_url,
+  })
 
   setEditing(false)
 
-  setProfile({
-  ...profile,
-  username,
-  bio: newBio,
-})
-
-setEditing(false)
-
-router.replace(`/profile/${username}`)
+  router.replace(`/profile/${username}`)
 }
-
 
 
   return (
@@ -218,6 +235,15 @@ router.replace(`/profile/${username}`)
       onChange={(e) => setNewBio(e.target.value)}
       placeholder="Bio"
       rows={4}
+      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3"
+    />
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) =>
+        setAvatarFile(e.target.files?.[0] || null)
+      }
       className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3"
     />
 
