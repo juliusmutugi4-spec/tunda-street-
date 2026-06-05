@@ -48,8 +48,7 @@ const { data: profile } = await supabase
   .single()
 
 const avatar_url =
-  profile?.avatar_url ||
-  `https://i.pravatar.cc/150?u=${user.id}`
+  profile?.avatar_url || null
 
 
 const username = profile?.username
@@ -60,11 +59,9 @@ const { error: insertError } = await supabase
   .insert({
     content: content,
     user_id: user.id,
-    username: username,
     avatar_url: avatar_url,
     video_url: videoUrl
   })
-
       if (insertError) throw insertError
 
       // Reset form
@@ -77,10 +74,13 @@ const { error: insertError } = await supabase
       // Refresh feed
       onPosted()
 
-    } catch (error) {
-      console.error('Error posting:', error)
-      alert('Failed to post. Try again.')
-    } finally {
+    } catch (error: any) {
+  console.error('Error posting:', error)
+  alert(error.message)
+}
+    
+    
+    finally {
       setUploading(false)
     }
   }
