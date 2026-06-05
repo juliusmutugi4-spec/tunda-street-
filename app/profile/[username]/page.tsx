@@ -210,6 +210,16 @@ const saveProfile = async () => {
                     {profile.username}
                   </h1>
 
+{currentUser?.id !== profile.id && (
+  <button
+    onClick={() => router.push(`/chat/${profile.id}`)}
+    className="mt-3 px-4 py-2 bg-emerald-500 rounded-lg text-sm font-bold"
+  >
+    Message
+  </button>
+)}
+
+
                   {currentUser?.id === profile.id && (
 <button
   onClick={() => setEditing(!editing)}
@@ -383,10 +393,14 @@ const saveProfile = async () => {
             ))
           )}
 
+
+
         </div>
 
       </div>
 
     </main>
+
+    
   )
 }
