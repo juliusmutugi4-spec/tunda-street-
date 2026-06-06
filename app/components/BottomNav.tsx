@@ -3,52 +3,64 @@
 import { Home, PlusSquare, MessageCircle, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-interface BottomNavProps {
-  user: {
-    id: string
-    avatar_url?: string | null
-  } | null
+type BottomNavProps = {
+  user: any
+  profile: { username?: string; avatar_url?: string | null } | null
 }
 
-export default function BottomNav({ user }: BottomNavProps) {
+export default function BottomNav({ user, profile }: BottomNavProps) {
   const router = useRouter()
 
-  const navItems = [
-    { name: 'Feed', icon: <Home size={22} />, href: '/' },
-    { name: 'Create', icon: <PlusSquare size={24} />, href: '/create', highlight: true },
-    { name: 'Messages', icon: <MessageCircle size={22} />, href: '/messages' },
-    { 
-      name: 'Profile', 
-      icon: user?.avatar_url ? (
-        <img
-          src={user.avatar_url}
-          alt="Profile"
-          className="w-6 h-6 rounded-full object-cover border border-zinc-700"
-        />
-      ) : (
-        <User size={22} />
-      ),
-      href: user ? `/profile/${user.id}` : '/login'
-    }
-  ]
+  const navigate = (path: string) => router.push(path)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-zinc-800 shadow-inner">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-zinc-800 shadow-md">
       <div className="max-w-xl mx-auto h-16 flex items-center justify-around">
-        {navItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => router.push(item.href)}
-            className={`
-              flex flex-col items-center justify-center text-zinc-400 hover:text-white transition-all duration-200
-              ${item.highlight ? 'text-emerald-400 hover:text-emerald-300' : ''}
-              active:scale-95
-            `}
-          >
-            {item.icon}
-            <span className="text-[10px] mt-1 font-semibold">{item.name}</span>
-          </button>
-        ))}
+        {/* Feed */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex flex-col items-center text-zinc-400 hover:text-white transition"
+        >
+          <Home size={24} />
+          <span className="text-[10px] mt-1">Feed</span>
+        </button>
+
+        {/* Create Post */}
+        <button
+          onClick={() => navigate('/create')}
+          className="flex flex-col items-center text-emerald-400 hover:text-emerald-300 transition"
+        >
+          <PlusSquare size={26} />
+          <span className="text-[10px] mt-1">Create</span>
+        </button>
+
+        {/* Messages */}
+        <button
+          onClick={() => navigate('/messages')}
+          className="flex flex-col items-center text-zinc-400 hover:text-white transition relative"
+        >
+          <MessageCircle size={24} />
+          <span className="text-[10px] mt-1">Messages</span>
+          {/* Optional unread badge */}
+          <span className="absolute -top-1 -right-2 w-3 h-3 bg-red-500 rounded-full border border-zinc-900" />
+        </button>
+
+        {/* Profile */}
+        <button
+          onClick={() => navigate(user ? `/profile/${user.id}` : '/')}
+          className="flex flex-col items-center text-zinc-400 hover:text-white transition"
+        >
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={profile.username ?? 'Profile'}
+              className="w-6 h-6 rounded-full object-cover border border-zinc-700"
+            />
+          ) : (
+            <User size={24} />
+          )}
+          <span className="text-[10px] mt-1">Profile</span>
+        </button>
       </div>
     </nav>
   )

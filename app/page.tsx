@@ -22,24 +22,50 @@ export default function Home() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showLogin, setShowLogin] = useState(false)
+const [profile, setProfile] = useState<any>(null)
+useEffect(() => {
+  const checkUser = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    setUser(session?.user ?? null)
 
-      setUser(session?.user ?? null)
-      fetchPosts()
+    if (session?.user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', session.user.id)
+        .single()
+
+      setProfile(data)
     }
-    checkUser()
 
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      (_event, session) => setUser(session?.user ?? null)
-    )
-    return () => sub.subscription.unsubscribe()
-  }, [])
+    fetchPosts()
+  }
 
+  checkUser()
+
+  const { data: sub } = supabase.auth.onAuthStateChange(
+    async (_event, session) => {
+      setUser(session?.user ?? null)
+
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', session.user.id)
+          .single()
+
+        setProfile(data)
+      } else {
+        setProfile(null)
+      }
+    }
+  )
+
+  return () => sub.subscription.unsubscribe()
+}, [])
   const fetchPosts = async () => {
     const { data: postsData, error: postsError } = await supabase
       .from('posts')
@@ -116,8 +142,11 @@ export default function Home() {
         )}
       </div>
 
-      {/* BottomNav fixed */}
-      <BottomNav user={user} />
+{/* BottomNav fixed */}
+<BottomNav
+  user={user}
+  profile={profile}
+/>
 
       {/* Login Modal */}
       {showLogin && (
