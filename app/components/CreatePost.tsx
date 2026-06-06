@@ -41,11 +41,14 @@ export default function CreatePost({ userId, onPosted }: CreatePostProps) {
       }
 
       // Get username from auth metadata or email
-const { data: profile } = await supabase
+const { data: profile, error: profileError } = await supabase
   .from('profiles')
   .select('username, avatar_url')
   .eq('id', user.id)
-  .single()
+  .maybeSingle()
+
+console.log('PROFILE:', profile)
+console.log('PROFILE ERROR:', profileError)
 
 const avatar_url =
   profile?.avatar_url || null
@@ -54,7 +57,7 @@ const avatar_url =
 const username = profile?.username
 
       // Insert post with username
-const { error: insertError } = await supabase
+const { data: insertedPost, error: insertError } = await supabase
   .from('posts')
   .insert({
     content: content,
@@ -62,6 +65,10 @@ const { error: insertError } = await supabase
     avatar_url: avatar_url,
     video_url: videoUrl
   })
+  .select()
+
+console.log('INSERTED POST:', insertedPost)
+console.log('INSERT ERROR:', insertError)
       if (insertError) {
   console.log(insertError)
   throw insertError

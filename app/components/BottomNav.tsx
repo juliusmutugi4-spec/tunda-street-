@@ -5,10 +5,18 @@ import { useRouter } from 'next/navigation'
 
 type BottomNavProps = {
   user: any
-  profile: { username?: string; avatar_url?: string | null } | null
+  profile: {
+    username?: string
+    avatar_url?: string | null
+  } | null
+  unreadCount: number
 }
 
-export default function BottomNav({ user, profile }: BottomNavProps) {
+export default function BottomNav({
+  user,
+  profile,
+  unreadCount,
+}: BottomNavProps) {
   const router = useRouter()
 
   const navigate = (path: string) => router.push(path)
@@ -16,6 +24,7 @@ export default function BottomNav({ user, profile }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-zinc-800 shadow-md">
       <div className="max-w-xl mx-auto h-16 flex items-center justify-around">
+
         {/* Feed */}
         <button
           onClick={() => navigate('/')}
@@ -25,7 +34,7 @@ export default function BottomNav({ user, profile }: BottomNavProps) {
           <span className="text-[10px] mt-1">Feed</span>
         </button>
 
-        {/* Create Post */}
+        {/* Create */}
         <button
           onClick={() => navigate('/create')}
           className="flex flex-col items-center text-emerald-400 hover:text-emerald-300 transition"
@@ -37,23 +46,49 @@ export default function BottomNav({ user, profile }: BottomNavProps) {
         {/* Messages */}
         <button
           onClick={() => navigate('/messages')}
-          className="flex flex-col items-center text-zinc-400 hover:text-white transition relative"
+          className="relative flex flex-col items-center text-zinc-400 hover:text-white transition"
         >
           <MessageCircle size={24} />
-          <span className="text-[10px] mt-1">Messages</span>
-          {/* Optional unread badge */}
-          <span className="absolute -top-1 -right-2 w-3 h-3 bg-red-500 rounded-full border border-zinc-900" />
+
+          {unreadCount > 0 && (
+            <span
+              className="
+                absolute
+                -top-2
+                -right-3
+                min-w-[18px]
+                h-[18px]
+                px-1
+                rounded-full
+                bg-red-500
+                text-white
+                text-[10px]
+                font-bold
+                flex
+                items-center
+                justify-center
+                border
+                border-[#060608]
+              "
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+
+          <span className="text-[10px] mt-1">
+            Messages
+          </span>
         </button>
 
         {/* Profile */}
         <button
           onClick={() =>
-  navigate(
-    profile?.username
-      ? `/profile/${profile.username}`
-      : '/'
-  )
-}
+            navigate(
+              profile?.username
+                ? `/profile/${profile.username}`
+                : '/'
+            )
+          }
           className="flex flex-col items-center text-zinc-400 hover:text-white transition"
         >
           {profile?.avatar_url ? (
@@ -65,8 +100,12 @@ export default function BottomNav({ user, profile }: BottomNavProps) {
           ) : (
             <User size={24} />
           )}
-          <span className="text-[10px] mt-1">Profile</span>
+
+          <span className="text-[10px] mt-1">
+            Profile
+          </span>
         </button>
+
       </div>
     </nav>
   )

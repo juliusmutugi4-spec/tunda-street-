@@ -15,9 +15,17 @@ interface PostProps {
     avatar_url?: string | null
   }
   user: any
+  profile?: { // <- add this
+    username?: string
+    avatar_url?: string | null
+  } | null
 }
 
-export default function Post({ post, user }: PostProps) {
+export default function Post({
+  post,
+  user,
+  profile,
+}: PostProps) {
   const router = useRouter()
   const [likes, setLikes] = useState(0)
   const [liked, setLiked] = useState(false)
@@ -109,13 +117,12 @@ export default function Post({ post, user }: PostProps) {
     if (!commentText.trim()) return
     if (!user) return alert('Login first')
 
-    await supabase.from('comments').insert({
-      post_id: post.id,
-      user_id: user.id,
-      content: commentText,
-      username,
-    })
-
+await supabase.from('comments').insert({
+  post_id: post.id,
+  user_id: user.id,
+  content: commentText,
+  username: profile?.username || 'Anonymous', // use the commenter
+})
     setCommentText('')
     loadPostData()
   }

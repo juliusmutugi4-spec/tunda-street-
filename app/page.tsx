@@ -10,44 +10,36 @@ import BottomNav from './components/BottomNav'
 type PostType = {
   id: string
   content: string
-  video_url: string | null
+  video_url?: string | null
   user_id: string
   created_at: string
   username?: string
   avatar_url?: string | null
 }
-
 export default function Home() {
+  const [unreadCount, setUnreadCount] = useState(0)
   const [posts, setPosts] = useState<PostType[]>([])
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showLogin, setShowLogin] = useState(false)
-const [profile, setProfile] = useState<any>(null)
-useEffect(() => {
-  const checkUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+  const [profile, setProfile] = useState<any>(null)
 
-    setUser(session?.user ?? null)
+  // Fetch unread messages count
+  const fetchUnreadMessages = async (userId: string) => {
+    const { count } = await supabase
+      .from('chat_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('receiver_id', userId)
 
-    if (session?.user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', session.user.id)
-        .single()
-
-      setProfile(data)
-    }
-
-    fetchPosts()
+    setUnreadCount(count || 0)
   }
 
-  checkUser()
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-  const { data: sub } = supabase.auth.onAuthStateChange(
-    async (_event, session) => {
       setUser(session?.user ?? null)
 
       if (session?.user) {
@@ -58,14 +50,41 @@ useEffect(() => {
           .single()
 
         setProfile(data)
-      } else {
-        setProfile(null)
-      }
-    }
-  )
 
-  return () => sub.subscription.unsubscribe()
-}, [])
+        // ✅ fetch unread messages here
+        await fetchUnreadMessages(session.user.id)
+      }
+
+      fetchPosts()
+    }
+
+    checkUser()
+
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', session.user.id)
+            .single()
+
+          setProfile(data)
+
+          // ✅ update unread messages on login
+          await fetchUnreadMessages(session.user.id)
+        } else {
+          setProfile(null)
+          setUnreadCount(0)
+        }
+      }
+    )
+
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
   const fetchPosts = async () => {
     const { data: postsData, error: postsError } = await supabase
       .from('posts')
@@ -95,16 +114,62 @@ useEffect(() => {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setUnreadCount(0)
   }
 
   return (
     <main className="min-h-screen bg-[#060608] text-[#f4f4f5] antialiased selection:bg-emerald-500/30 font-sans tracking-tight relative overflow-x-hidden">
-
       {/* TopNav fixed */}
       <TopNav user={user} onLogin={() => setShowLogin(true)} onLogout={handleLogout} />
 
       {/* Feed scrollable */}
-      <div className="max-w-xl mx-auto px-4 py-6 space-y-6 relative z-10 pt-20 pb-20 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 128px)' }}>
+<div
+  className="
+    max-w-7xl
+    mx-auto
+    px-4
+    pt-20
+    pb-20
+    lg:grid
+    lg:grid-cols-12
+    lg:gap-6
+  "
+>
+{/* DESKTOP LEFT SIDEBAR */}
+<div className="hidden lg:block lg:col-span-3">
+  <div className="sticky top-24 space-y-2">
+    <h2 className="font-bold text-lg text-white mb-3">Chats</h2>
+
+    {/* Map over conversations */}
+    {user && posts.length > 0 ? (
+      posts.map((post) => (
+        <button
+          key={post.id}
+          onClick={() => console.log(`Open chat for ${post.username}`)}
+          className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-zinc-800 transition"
+        >
+          <img
+            src={post.avatar_url || '/avatar-placeholder.png'}
+            alt={post.username}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div className="flex-1 text-left min-w-0">
+            <h3 className="text-sm font-semibold text-white truncate">{post.username}</h3>
+            <p className="text-xs text-zinc-400 truncate">{post.content}</p>
+          </div>
+          <span className="text-[10px] text-zinc-500">
+            {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </button>
+      ))
+    ) : (
+      <p className="text-xs text-zinc-500">No conversations</p>
+    )}
+  </div>
+</div>
+
+{/* MAIN FEED */}
+<div className="lg:col-span-6"></div>
         {user && (
           <div className="group relative rounded-xl bg-zinc-900/20 border border-zinc-900 overflow-hidden shadow-2xl backdrop-blur-md transition-all duration-500 hover:border-zinc-800/80">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
@@ -134,7 +199,11 @@ useEffect(() => {
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/0 to-transparent group-hover:via-emerald-500/20 transition-all duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-500/0 to-transparent group-hover:via-red-500/10 transition-all duration-500" />
                 <div className="p-0.5 relative z-10">
-                  <Post post={post} user={user} />
+                  <Post
+  post={post}
+  user={user}
+  profile={profile}
+/>
                 </div>
               </div>
             ))}
@@ -142,11 +211,12 @@ useEffect(() => {
         )}
       </div>
 
-{/* BottomNav fixed */}
-<BottomNav
-  user={user}
-  profile={profile}
-/>
+      {/* BottomNav fixed */}
+      <BottomNav
+        user={user}
+        profile={profile}
+        unreadCount={unreadCount} // ✅ pass unread count to show badge
+      />
 
       {/* Login Modal */}
       {showLogin && (
