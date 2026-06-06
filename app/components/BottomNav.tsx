@@ -47,7 +47,13 @@ export default function BottomNav({ user, profile }: BottomNavProps) {
 
         {/* Profile */}
         <button
-          onClick={() => navigate(user ? `/profile/${user.id}` : '/')}
+          onClick={() =>
+  navigate(
+    profile?.username
+      ? `/profile/${profile.username}`
+      : '/'
+  )
+}
           className="flex flex-col items-center text-zinc-400 hover:text-white transition"
         >
           {profile?.avatar_url ? (
