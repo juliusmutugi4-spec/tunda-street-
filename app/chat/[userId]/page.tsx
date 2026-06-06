@@ -50,43 +50,43 @@ export default function ChatPage() {
       setMessages(data || [])
       setLoading(false)
 
-      channel = supabase
-        .channel(
-          `chat-${user.id}-${otherUserId}`
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-          },
-          (payload: any) => {
-            const msg = payload.new
+channel = supabase.channel(
+  `chat-${user.id}-${otherUserId}`
+)
 
-            const isPartOfChat =
-              (msg.sender_id === user.id &&
-                msg.receiver_id ===
-                  otherUserId) ||
-              (msg.sender_id ===
-                otherUserId &&
-                msg.receiver_id ===
-                  user.id)
+channel.on(
+  'postgres_changes',
+  {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'chat_messages',
+  },
+  (payload: any) => {
+    const msg = payload.new
 
-            if (!isPartOfChat) return
+    const isPartOfChat =
+      (msg.sender_id === user.id &&
+        msg.receiver_id === otherUserId) ||
+      (msg.sender_id === otherUserId &&
+        msg.receiver_id === user.id)
 
-            setMessages((prev) => {
-              const exists = prev.some(
-                (m) => m.id === msg.id
-              )
+    if (!isPartOfChat) return
 
-              if (exists) return prev
+    setMessages((prev) => {
+      const exists = prev.some(
+        (m) => m.id === msg.id
+      )
 
-              return [...prev, msg]
-            })
-          }
-        )
-        .subscribe()
+      if (exists) return prev
+
+      return [...prev, msg]
+    })
+  }
+)
+
+await supabase.removeChannel(channel)
+
+channel.subscribe()
     }
 
     load()

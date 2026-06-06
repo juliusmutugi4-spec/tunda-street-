@@ -50,10 +50,10 @@ const fetchPosts = async () => {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error(error)
-    return
-  }
+if (error) {
+  console.error('Supabase fetchPosts error:', JSON.stringify(error, null, 2))
+  return
+}
 
   setPosts(data || [])
   setLoading(false)
