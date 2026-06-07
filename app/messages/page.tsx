@@ -260,7 +260,15 @@ return (
   </div>
 
       {/* CHAT LIST */}
-      <div className="w-[380px] border-r border-zinc-800 bg-[#111b21] flex flex-col">
+      <div
+  className={`
+    ${selectedChat ? 'hidden lg:flex' : 'flex'}
+    w-full lg:w-[380px]
+    border-r border-zinc-800
+    bg-[#111b21]
+    flex-col
+  `}
+>
 
         <div className="px-5 py-4 border-b border-zinc-800">
           <h2 className="text-xl font-semibold">
@@ -308,14 +316,29 @@ return (
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div
+  className={`
+    ${selectedChat ? 'flex' : 'hidden lg:flex'}
+    flex-1
+    flex-col
+    min-h-0
+    overflow-hidden
+  `}
+>
 
         {selectedChat ? (
           <>
             {/* HEADER */}
             <div className="h-16 shrink-0 bg-[#202c33] border-b border-zinc-800 flex items-center justify-between px-5">
 
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+
+  <button
+    onClick={() => setSelectedChat(null)}
+    className="lg:hidden text-xl"
+  >
+    ←
+  </button>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center font-bold">
                   {selectedChat.username.charAt(0)}
                 </div>
