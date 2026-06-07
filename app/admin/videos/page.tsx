@@ -78,9 +78,14 @@ setDescription('')
 setThumbnail(null)
 setVideo(null)
 
-  } catch (err) {
-    console.error(err)
-  } finally {
+} catch (err: any) {
+  console.error('UPLOAD ERROR:', err)
+
+  alert(
+    err?.message ||
+    JSON.stringify(err, null, 2)
+  )
+} finally {
     setUploading(false)
   }
 }
@@ -200,7 +205,9 @@ return (
   }
   className="block"
 />
-
+<p className="text-sm text-cyan-400">
+  {video?.name}
+</p>
 <button
   onClick={uploadVideo}
   disabled={uploading}
