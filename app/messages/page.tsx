@@ -315,17 +315,17 @@ return (
         </div>
       </div>
 
-      {/* CHAT AREA */}
-      <div
+{/* CHAT AREA */}
+<div
   className={`
     ${selectedChat ? 'flex' : 'hidden lg:flex'}
     flex-1
     flex-col
+    h-full
     min-h-0
     overflow-hidden
   `}
 >
-
         {selectedChat ? (
           <>
             {/* HEADER */}
