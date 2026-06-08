@@ -12,15 +12,24 @@ export default function WatchVideo() {
     loadVideo()
   }, [])
 
-  const loadVideo = async () => {
-    const { data } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('id', params.id)
-      .single()
+const loadVideo = async () => {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('id', params.id)
+    .single()
 
-    setVideo(data)
-  }
+  if (error || !data) return
+
+  setVideo(data)
+
+  await supabase
+    .from('videos')
+    .update({
+      views: (data.views || 0) + 1,
+    })
+    .eq('id', data.id)
+}
 
   if (!video) return <div>Loading...</div>
 

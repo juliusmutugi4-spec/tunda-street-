@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 export default function VideosPage() {
 const router = useRouter()
 const [videos, setVideos] = useState<any[]>([])
+const [trendingVideos, setTrendingVideos] = useState<any[]>([])
 const [featured, setFeatured] = useState<any>(null)
 const [loading, setLoading] = useState(true)
 
@@ -31,6 +32,15 @@ if (error) {
 }
 
   setVideos(data || [])
+
+const { data: trending } = await supabase
+  .from('videos')
+  .select('*')
+  .order('views', { ascending: false })
+  .limit(10)
+
+setTrendingVideos(trending || [])
+
 
 const featuredMovie =
   data?.find((v) => v.featured)
@@ -188,7 +198,7 @@ to-black/20
   "
 >
 
-  {videos.map((video) => (
+  {trendingVideos.map((video) => (
 <div
   key={video.id}
   onClick={() => router.push(`/videos/${video.id}`)}
@@ -272,11 +282,15 @@ className="
   "
 />
 
-      <div className="p-4">
-        <h3 className="font-bold">
-          {video.title}
-        </h3>
-      </div>
+<div className="p-4">
+  <h3 className="font-bold">
+    {video.title}
+  </h3>
+
+  <p className="text-xs text-zinc-500 mt-1">
+    👁 {video.views || 0} views
+  </p>
+</div>
     </div>
   ))}
 
