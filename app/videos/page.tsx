@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 
 
 export default function VideosPage() {
-
+const router = useRouter()
 const [videos, setVideos] = useState<any[]>([])
 const [loading, setLoading] = useState(true)
 
@@ -32,8 +33,17 @@ if (error) {
   setLoading(false)
 }
 
+if (loading) {
+  return (
+    <main className="min-h-screen bg-[#060608] text-white flex items-center justify-center">
+      Loading videos...
+    </main>
+  )
+}
+
 
   return (
+
     <main className="min-h-screen bg-[#060608] text-white p-6">
 
       <h1 className="text-4xl font-bold mb-8">
@@ -43,16 +53,19 @@ if (error) {
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
   {videos.map((video) => (
-    <div
-      key={video.id}
-      className="bg-zinc-900 rounded-2xl overflow-hidden"
-    >
+<div
+  key={video.id}
+  onClick={() => router.push(`/videos/${video.id}`)}
+  className="bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 transition"
+>
 
-      <img
-        src={video.thumbnail_url}
-        alt={video.title}
-        className="w-full h-48 object-cover"
-      />
+<video
+  src={video.video_url}
+  poster={video.thumbnail_url}
+  className="w-full h-48 object-cover"
+  muted
+  preload="metadata"
+/>
 
       <div className="p-4">
 
