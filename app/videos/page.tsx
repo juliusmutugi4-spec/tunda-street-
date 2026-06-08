@@ -58,15 +58,17 @@ if (loading) {
 
 {featured && (
   <div
-    className="
-      relative
-      h-[500px]
-      rounded-3xl
-      overflow-hidden
-      mb-10
-      border
-      border-zinc-800
-    "
+className="
+  relative
+  h-[320px]
+  sm:h-[400px]
+  lg:h-[600px]
+  rounded-3xl
+  overflow-hidden
+  mb-10
+  border
+  border-zinc-800
+"
   >
     <img
       src={featured.thumbnail_url}
@@ -83,36 +85,66 @@ if (loading) {
       className="
         absolute
         inset-0
-        bg-gradient-to-r
-        from-black
-        via-black/70
-        to-transparent
+bg-gradient-to-r
+from-black
+via-black/85
+to-black/20
       "
     />
 
-    <div className="relative z-10 p-10 max-w-2xl">
+    <div className="
+  relative
+  z-10
+  p-6
+  sm:p-8
+  lg:p-14
+  max-w-xl
+  h-full
+  flex
+  flex-col
+  justify-center
+">
 
       <p className="text-red-500 font-bold">
         FEATURED MOVIE
       </p>
 
-      <h1 className="text-6xl font-black mt-3">
+      <h1 className="
+  text-4xl
+  sm:text-5xl
+  lg:text-7xl
+  font-black
+  mt-3
+">
         {featured.title}
       </h1>
 
-      <p className="text-zinc-300 mt-6">
+      <p className="
+  text-sm
+  sm:text-base
+  lg:text-lg
+  text-zinc-300
+  mt-4
+  max-w-lg
+">
         {featured.description}
       </p>
 
       <button
-        className="
-          mt-8
-          px-8
-          py-4
-          bg-red-600
-          rounded-xl
-          font-bold
-        "
+className="
+  mt-6
+  w-fit
+  px-6
+  sm:px-8
+  py-3
+  rounded-xl
+  font-bold
+  bg-gradient-to-r
+  from-red-700
+  via-emerald-500
+  to-sky-500
+  shadow-xl
+"
       >
         ▶ Watch Now
       </button>
