@@ -52,9 +52,6 @@ if (loading) {
 
     <main className="min-h-screen bg-[#060608] text-white p-6">
 
-      <h1 className="text-4xl font-bold mb-8">
-        Videos
-      </h1>
 
 {featured && (
   <div
@@ -70,6 +67,31 @@ className="
   border-zinc-800
 "
   >
+
+<div
+  className="
+    absolute
+    inset-0
+    bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,.25),transparent_30%)]
+  "
+/>
+
+<div
+  className="
+    absolute
+    inset-0
+    bg-[radial-gradient(circle_at_bottom_left,rgba(34,197,94,.25),transparent_30%)]
+  "
+/>
+
+<div
+  className="
+    absolute
+    inset-0
+    bg-[radial-gradient(circle_at_center,rgba(220,38,38,.15),transparent_50%)]
+  "
+/>
+
     <img
       src={featured.thumbnail_url}
       className="
@@ -130,37 +152,61 @@ to-black/20
         {featured.description}
       </p>
 
-      <button
-className="
-  mt-6
-  w-fit
-  px-6
-  sm:px-8
-  py-3
-  rounded-xl
-  font-bold
-  bg-gradient-to-r
-  from-red-700
-  via-emerald-500
-  to-sky-500
-  shadow-xl
-"
-      >
-        ▶ Watch Now
-      </button>
-
+<button
+  onClick={() => router.push(`/videos/${featured.id}`)}
+  className="
+    mt-6
+    w-fit
+    px-8
+    py-3
+    rounded-xl
+    font-bold
+    bg-gradient-to-r
+    from-red-700
+    via-emerald-500
+    to-sky-500
+    shadow-xl
+    hover:scale-105
+    transition
+  "
+>
+  ▶ Watch Now
+</button>
     </div>
   </div>
 )}
 
 
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<h2 className="text-2xl font-bold mb-4">
+  📺 Recently Added
+</h2>
+
+<div
+  className="
+    flex
+    gap-4
+    overflow-x-auto
+    pb-4
+    scrollbar-hide
+  "
+>
 
   {videos.map((video) => (
 <div
   key={video.id}
   onClick={() => router.push(`/videos/${video.id}`)}
-  className="bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 transition"
+  className="
+  min-w-[240px]
+  sm:min-w-[280px]
+  bg-zinc-900
+  rounded-2xl
+  overflow-hidden
+  cursor-pointer
+  hover:scale-105
+  transition
+  border
+  border-zinc-800
+"
 >
 
 <video
@@ -181,6 +227,107 @@ className="
           {video.description}
         </p>
 
+      </div>
+
+    </div>
+  ))}
+
+</div>
+
+
+<h2 className="text-2xl font-bold mt-10 mb-4">
+  ▶ Continue Watching
+</h2>
+
+<div className="flex gap-4 overflow-x-auto pb-4">
+
+  {videos.map((video) => (
+    <div
+      key={`continue-${video.id}`}
+      onClick={() => router.push(`/videos/${video.id}`)}
+      className="
+        group
+        min-w-[260px]
+        sm:min-w-[320px]
+        bg-zinc-900/80
+        backdrop-blur-xl
+        rounded-2xl
+        overflow-hidden
+        border
+        border-zinc-800
+        hover:border-red-500
+        hover:shadow-[0_0_40px_rgba(239,68,68,.25)]
+        hover:scale-105
+        transition-all
+        duration-300
+      "
+    >
+<img
+  src={video.thumbnail_url}
+  className="
+    w-full
+    h-40
+    object-cover
+    transition-transform
+    duration-500
+    group-hover:scale-110
+  "
+/>
+
+      <div className="p-4">
+        <h3 className="font-bold">
+          {video.title}
+        </h3>
+      </div>
+    </div>
+  ))}
+
+</div>
+
+
+<h2 className="text-2xl font-bold mt-10 mb-4">
+  🔥 Trending Now
+</h2>
+
+<div className="flex gap-4 overflow-x-auto pb-4">
+
+  {videos.map((video) => (
+    <div
+     key={`trend-${video.id}`}
+      onClick={() => router.push(`/videos/${video.id}`)}
+className="
+ group
+  min-w-[260px]
+  sm:min-w-[320px]
+  bg-zinc-900/80
+  backdrop-blur-xl
+  rounded-2xl
+  overflow-hidden
+  border
+  border-zinc-800
+  hover:border-red-500
+  hover:shadow-[0_0_40px_rgba(239,68,68,.25)]
+  hover:scale-105
+  transition-all
+  duration-300
+"
+    >
+<img
+  src={video.thumbnail_url}
+  className="
+    w-full
+    h-40
+    object-cover
+    transition-transform
+    duration-500
+    group-hover:scale-110
+  "
+/>
+
+      <div className="p-4">
+        <h3 className="font-bold">
+          {video.title}
+        </h3>
       </div>
 
     </div>
