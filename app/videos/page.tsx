@@ -57,14 +57,11 @@ if (loading) {
   <div
 className="
   relative
-  h-[320px]
-  sm:h-[400px]
-  lg:h-[600px]
-  rounded-3xl
+  h-[70vh]
+  min-h-[500px]
+  lg:min-h-[700px]
   overflow-hidden
-  mb-10
-  border
-  border-zinc-800
+  mb-12
 "
   >
 
@@ -127,14 +124,14 @@ to-black/20
   justify-center
 ">
 
-      <p className="text-red-500 font-bold">
-        FEATURED MOVIE
-      </p>
+<p className="text-red-500 font-bold tracking-[0.3em] uppercase">
+  Tunda Original
+</p>
 
-      <h1 className="
-  text-4xl
-  sm:text-5xl
-  lg:text-7xl
+ <h1 className="
+  text-5xl
+  sm:text-6xl
+  lg:text-8xl
   font-black
   mt-3
 ">
@@ -245,10 +242,10 @@ to-black/20
     <div
       key={`continue-${video.id}`}
       onClick={() => router.push(`/videos/${video.id}`)}
-      className="
-        group
-        min-w-[260px]
-        sm:min-w-[320px]
+className="
+  group
+  min-w-[140px]
+  sm:min-w-[180px]
         bg-zinc-900/80
         backdrop-blur-xl
         rounded-2xl
@@ -266,7 +263,8 @@ to-black/20
   src={video.thumbnail_url}
   className="
     w-full
-    h-40
+    h-56
+    sm:h-64
     object-cover
     transition-transform
     duration-500
@@ -296,9 +294,9 @@ to-black/20
      key={`trend-${video.id}`}
       onClick={() => router.push(`/videos/${video.id}`)}
 className="
- group
-  min-w-[260px]
-  sm:min-w-[320px]
+  group
+  min-w-[140px]
+  sm:min-w-[180px]
   bg-zinc-900/80
   backdrop-blur-xl
   rounded-2xl
@@ -316,7 +314,8 @@ className="
   src={video.thumbnail_url}
   className="
     w-full
-    h-40
+    h-56
+    sm:h-64
     object-cover
     transition-transform
     duration-500
