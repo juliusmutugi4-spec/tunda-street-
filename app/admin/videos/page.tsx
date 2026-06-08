@@ -84,7 +84,12 @@ const { error: dbError } = await supabase
   })
 
 if (dbError) {
-  alert('❌ DATABASE FAILED: ' + dbError.message)
+  console.log('DB ERROR FULL:', dbError)
+
+  alert(
+    JSON.stringify(dbError, null, 2)
+  )
+
   throw dbError
 }
 
