@@ -60,16 +60,51 @@ if (loading) {
 
   return (
 
-    <main className="min-h-screen bg-[#060608] text-white p-6">
+    <main className="
+min-h-screen
+text-white
+p-6
+bg-black
+relative
+overflow-hidden
+">
+<div className="
+absolute
+top-0
+left-0
+w-full
+h-full
+pointer-events-none
+bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,.12),transparent_30%)]
+"/>
 
+<div className="
+absolute
+bottom-0
+left-0
+w-full
+h-full
+pointer-events-none
+bg-[radial-gradient(circle_at_bottom_left,rgba(34,197,94,.12),transparent_30%)]
+"/>
+
+<div className="
+absolute
+top-1/2
+left-1/2
+w-full
+h-full
+pointer-events-none
+bg-[radial-gradient(circle,rgba(220,38,38,.08),transparent_50%)]
+"/>
 
 {featured && (
   <div
 className="
   relative
-  h-[70vh]
-  min-h-[500px]
-  lg:min-h-[700px]
+h-[50vh]
+min-h-[320px]
+lg:min-h-[500px]
   overflow-hidden
   mb-12
 "
@@ -134,9 +169,21 @@ to-black/20
   justify-center
 ">
 
-<p className="text-red-500 font-bold tracking-[0.3em] uppercase">
-  Tunda Original
-</p>
+<div className="
+inline-flex
+items-center
+gap-2
+px-4
+py-2
+rounded-full
+bg-white/10
+backdrop-blur-xl
+border
+border-white/10
+">
+  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"/>
+  TUNDA ORIGINAL
+</div>
 
  <h1 className="
   text-5xl
@@ -212,7 +259,7 @@ to-black/20
   hover:scale-105
   transition
   border
-  border-zinc-800
+  border-white/10
 "
 >
 
@@ -224,17 +271,11 @@ to-black/20
   preload="metadata"
 />
 
-      <div className="p-4">
-
-        <h2 className="font-semibold">
-          {video.title}
-        </h2>
-
-        <p className="text-sm text-zinc-400 mt-2 line-clamp-2">
-          {video.description}
-        </p>
-
-      </div>
+<div className="p-2">
+  <h3 className="text-xs font-semibold truncate">
+    {video.title}
+  </h3>
+</div>
 
     </div>
   ))}
@@ -246,7 +287,7 @@ to-black/20
   ▶ Continue Watching
 </h2>
 
-<div className="flex gap-4 overflow-x-auto pb-4">
+<div className="flex gap-2 overflow-x-auto pb-4 px-1">
 
   {videos.map((video) => (
     <div
@@ -254,15 +295,15 @@ to-black/20
       onClick={() => router.push(`/videos/${video.id}`)}
 className="
   group
-  min-w-[140px]
-  sm:min-w-[180px]
-        bg-zinc-900/80
+  min-w-[100px]
+  sm:min-w-[120px]
+        bg-white/[0.03]
         backdrop-blur-xl
         rounded-2xl
         overflow-hidden
         border
-        border-zinc-800
-        hover:border-red-500
+        border-white/10
+        hover:border-sky-400
         hover:shadow-[0_0_40px_rgba(239,68,68,.25)]
         hover:scale-105
         transition-all
@@ -271,11 +312,11 @@ className="
     >
 <img
   src={video.thumbnail_url}
-  className="
-    w-full
-    h-56
-    sm:h-64
-    object-cover
+className="
+  w-full
+  h-40
+  sm:h-52
+  object-cover
     transition-transform
     duration-500
     group-hover:scale-110
@@ -301,23 +342,23 @@ className="
   🔥 Trending Now
 </h2>
 
-<div className="flex gap-4 overflow-x-auto pb-4">
+<div className="flex gap-2 overflow-x-auto pb-4 px-1">
 
-  {videos.map((video) => (
+  {trendingVideos.map((video) => (
     <div
      key={`trend-${video.id}`}
       onClick={() => router.push(`/videos/${video.id}`)}
 className="
   group
-  min-w-[140px]
-  sm:min-w-[180px]
-  bg-zinc-900/80
+  min-w-[100px]
+  sm:min-w-[120px]
+  bg-white/[0.03]
   backdrop-blur-xl
   rounded-2xl
   overflow-hidden
   border
-  border-zinc-800
-  hover:border-red-500
+  border-white/10
+  hover:border-sky-400
   hover:shadow-[0_0_40px_rgba(239,68,68,.25)]
   hover:scale-105
   transition-all

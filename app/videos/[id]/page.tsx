@@ -12,45 +12,64 @@ export default function WatchVideo() {
     loadVideo()
   }, [])
 
-const loadVideo = async () => {
-  const { data, error } = await supabase
-    .from('videos')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+  const loadVideo = async () => {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      .eq('id', params.id)
+      .single()
 
-  if (error || !data) return
+    if (error || !data) return
 
-  setVideo(data)
+    const newViews = (data.views || 0) + 1
 
-  await supabase
-    .from('videos')
-    .update({
-      views: (data.views || 0) + 1,
+    await supabase
+      .from('videos')
+      .update({
+        views: newViews,
+      })
+      .eq('id', data.id)
+
+    setVideo({
+      ...data,
+      views: newViews,
     })
-    .eq('id', data.id)
-}
+  }
 
-  if (!video) return <div>Loading...</div>
+  if (!video) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
+
       <video
         src={video.video_url}
         controls
         autoPlay
-        className="w-full max-h-[80vh]"
+        className="w-full max-h-[80vh] bg-black"
       />
 
       <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-3xl font-bold">
+
+        <h1 className="text-3xl md:text-5xl font-black">
           {video.title}
         </h1>
 
-        <p className="text-zinc-400 mt-4">
+        <p className="text-zinc-500 mt-2">
+          👁 {video.views || 0} views
+        </p>
+
+        <p className="text-zinc-400 mt-4 text-lg">
           {video.description}
         </p>
+
       </div>
+
     </main>
   )
 }
