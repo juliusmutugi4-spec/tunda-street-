@@ -14,6 +14,16 @@ const [video, setVideo] = useState<File | null>(null)
 const [uploading, setUploading] = useState(false)
 
 const uploadVideo = async () => {
+
+const {
+  data: { user }
+} = await supabase.auth.getUser()
+
+if (!user) {
+  alert('❌ You are not logged in')
+  return
+}
+
   if (!title || !video || !thumbnail) {
     alert('Please fill all fields')
     return
@@ -79,6 +89,7 @@ if (dbError) {
 }
 
 alert('✅ DATABASE ROW CREATED')
+
 
 alert('Video uploaded successfully!')
 
