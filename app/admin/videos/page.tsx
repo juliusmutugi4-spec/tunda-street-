@@ -29,8 +29,11 @@ const { data: thumbnailData, error: thumbnailError } =
     .upload(thumbnailName, thumbnail)
 
 if (thumbnailError) {
+  alert('❌ THUMBNAIL FAILED: ' + thumbnailError.message)
   throw thumbnailError
 }
+
+alert('✅ THUMBNAIL UPLOADED')
 
 const thumbnailUrl =
   supabase.storage
@@ -48,8 +51,11 @@ const { data: videoData, error: videoError } =
     .upload(videoName, video)
 
 if (videoError) {
+  alert('❌ VIDEO FAILED: ' + videoError.message)
   throw videoError
 }
+
+alert('✅ VIDEO UPLOADED')
 
 const videoUrl =
   supabase.storage
@@ -68,8 +74,11 @@ const { error: dbError } = await supabase
   })
 
 if (dbError) {
+  alert('❌ DATABASE FAILED: ' + dbError.message)
   throw dbError
 }
+
+alert('✅ DATABASE ROW CREATED')
 
 alert('Video uploaded successfully!')
 
