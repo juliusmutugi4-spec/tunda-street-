@@ -32,7 +32,7 @@ export default function Post({
   const [liked, setLiked] = useState(false)
   const [comments, setComments] = useState<any[]>([])
   const [commentText, setCommentText] = useState('')
-
+const [showComments, setShowComments] = useState(false)
   const username = post.username || 'Anonymous'
   const avatarUrl = post.avatar_url || '/avatar-placeholder.png'
 
@@ -118,12 +118,22 @@ export default function Post({
     if (!commentText.trim()) return
     if (!user) return alert('Login first')
 
-await supabase.from('comments').insert({
-  post_id: post.id,
-  user_id: user.id,
-  content: commentText,
-  username: profile?.username || 'Anonymous', // use the commenter
-})
+const { error } = await supabase
+  .from('comments')
+  .insert({
+    post_id: post.id,
+    user_id: user.id,
+    content: commentText,
+    username: profile?.username || 'Anonymous',
+    avatar_url: profile?.avatar_url || null,
+  })
+
+console.log('COMMENT ERROR:', error)
+
+if (error) {
+  alert(error.message)
+  return
+}
     setCommentText('')
     loadPostData()
   }
@@ -299,35 +309,344 @@ await supabase.from('comments').insert({
   </div>
 )}
 
+<div className="mt-4 flex items-center gap-4 text-[11px] font-mono text-zinc-500">
+  <span>
+    ❤️ {likes} REACTIONS
+  </span>
 
-      {/* Likes */}
-      <button onClick={toggleLike} className="text-xs text-zinc-400">
-        {liked ? '🔥' : '🤍'} {likes}
+  <span>
+    💬 {comments.length} COMMENTS
+  </span>
+</div>
+
+{/* ACTION BAR */}
+<div
+  className="
+    mt-5
+    flex
+    items-center
+    gap-6
+    border-t
+    border-zinc-800/60
+    bg-gradient-to-r
+    from-zinc-950
+    via-zinc-900/20
+    to-transparent
+    p-3.5
+    backdrop-blur-md
+    rounded-xl
+  "
+>
+
+  {/* LIKE ENGINE */}
+  <button
+    onClick={toggleLike}
+    className="
+      group/like
+      flex
+      items-center
+      gap-2.5
+      rounded-lg
+      px-3
+      py-1.5
+      text-zinc-400
+      transition-all
+      duration-300
+      hover:text-pink-400
+      hover:bg-pink-500/5
+      active:scale-95
+    "
+  >
+    <span
+      className={`
+        transition-all
+        duration-300
+        group-hover/like:scale-110
+        ${
+          liked
+            ? 'text-pink-500 drop-shadow-[0_0_10px_rgba(236,72,153,0.7)]'
+            : 'text-zinc-500'
+        }
+      `}
+    >
+      ❤️
+    </span>
+
+    <span
+      className={`
+        font-mono
+        text-xs
+        tracking-wider
+        ${
+          liked
+            ? 'text-pink-400 font-bold'
+            : ''
+        }
+      `}
+    >
+      {likes}
+    </span>
+  </button>
+
+  {/* COMMENTS */}
+<button
+  onClick={() => setShowComments(!showComments)}
+  className="
+    group/comment
+    flex
+    items-center
+    gap-2.5
+    rounded-lg
+    px-3
+    py-1.5
+    text-zinc-400
+    hover:text-cyan-400
+    hover:bg-cyan-500/5
+    transition-all
+    duration-300
+  "
+>
+    <span
+      className="
+        group-hover/comment:scale-110
+        transition-all
+        duration-300
+      "
+    >
+      💬
+    </span>
+
+    <span className="relative font-mono text-xs tracking-wider">
+      {comments.length}
+
+      {comments.length > 0 && (
+        <span
+          className="
+            absolute
+            -top-1
+            -right-2
+            h-2
+            w-2
+            rounded-full
+            bg-cyan-400
+            animate-pulse
+          "
+        />
+      )}
+    </span>
+  </button>
+
+  {/* TRANSMIT */}
+  <button
+    onClick={() =>
+      navigator.share?.({
+        title: 'CWV',
+        text: post.content,
+        url: window.location.href,
+      })
+    }
+    className="
+      ml-auto
+      flex
+      items-center
+      gap-2
+      rounded-lg
+      border
+      border-cyan-500/20
+      bg-cyan-500/5
+      px-4
+      py-2
+      text-[11px]
+      font-mono
+      tracking-[0.2em]
+      text-cyan-400
+      transition-all
+      duration-300
+      hover:border-cyan-400/50
+      hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]
+      hover:bg-cyan-500/10
+      active:scale-95
+    "
+  >
+    🚀 TRANSMIT
+  </button>
+
+</div>
+
+
+{showComments && (
+  <>
+<div className="mt-4 flex gap-3">
+
+  {/* USER AVATAR */}
+  <img
+    src={profile?.avatar_url || '/avatar-placeholder.png'}
+    alt=""
+    className="
+      h-10
+      w-10
+      rounded-xl
+      object-cover
+      border
+      border-cyan-500/20
+    "
+  />
+
+  {/* INPUT AREA */}
+  <div className="flex-1">
+
+    <div
+      className="
+        relative
+        overflow-hidden
+        rounded-xl
+        border
+        border-cyan-500/20
+        bg-zinc-950/80
+        backdrop-blur-xl
+      "
+    >
+      <input
+        value={commentText}
+        onChange={(e) => setCommentText(e.target.value)}
+        maxLength={280}
+        placeholder="Transmit a response..."
+        className="
+          w-full
+          bg-transparent
+          px-4
+          py-3
+          text-sm
+          text-zinc-200
+          outline-none
+          placeholder:text-zinc-500
+        "
+      />
+
+      <div
+        className="
+          absolute
+          top-0
+          left-0
+          right-0
+          h-[1px]
+          bg-gradient-to-r
+          from-transparent
+          via-cyan-400/40
+          to-transparent
+        "
+      />
+    </div>
+
+    <div className="mt-2 flex items-center justify-between">
+
+      <span className="text-[10px] font-mono text-zinc-600">
+        SIGNAL LENGTH: {commentText.length}/280
+      </span>
+
+      <button
+        onClick={addComment}
+        disabled={!commentText.trim()}
+        className="
+          rounded-lg
+          border
+          border-cyan-500/20
+          bg-cyan-500/10
+          px-4
+          py-2
+          text-[11px]
+          font-mono
+          tracking-[0.2em]
+          text-cyan-400
+          transition-all
+          duration-300
+          hover:border-cyan-400/50
+          hover:bg-cyan-500/20
+          hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]
+          disabled:opacity-40
+          disabled:cursor-not-allowed
+        "
+      >
+        🚀 TRANSMIT
       </button>
 
-      {/* Comment input */}
-      {user && (
-        <div className="flex gap-2 mt-3">
-          <input
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            className="flex-1 bg-zinc-900 p-2 text-xs rounded"
-            placeholder="Comment..."
-          />
-          <button onClick={addComment} className="bg-cyan-500 px-3 text-xs rounded">
-            Send
-          </button>
-        </div>
-      )}
+    </div>
 
-      {/* Comments */}
-      <div className="mt-3 space-y-2">
-        {comments.map((c) => (
-          <div key={c.id} className="text-xs text-zinc-400">
-            <b>{c.username}</b>: {c.content}
-          </div>
-        ))}
+  </div>
+
+</div>
+
+    <div className="mt-4 space-y-2">
+   {comments.map((c) => (
+  <div
+    key={c.id}
+    className="group/comment relative flex gap-4 rounded-xl border border-zinc-800/50 bg-gradient-to-b from-zinc-900/60 via-zinc-950/40 to-zinc-950/90 p-4 backdrop-blur-md transition-all duration-300 hover:border-cyan-500/30 hover:bg-zinc-950/80 hover:shadow-[0_0_25px_rgba(6,182,212,0.08),inset_0_1px_1px_rgba(255,255,255,0.03)]"
+  >
+    {/* Micro Corner Tech Bracket - Top Right Accent */}
+    <div className="absolute top-0 right-0 h-1.5 w-1.5 border-t border-r border-zinc-700 transition-colors duration-300 group-hover/comment:border-cyan-400" />
+    
+    {/* Quantized Bio-Link Frame (Avatar Box) */}
+    <div className="relative h-10 w-10 shrink-0">
+      {/* Outer Rotating Energy Ring Simulation */}
+      <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-cyan-500/0 via-cyan-500/20 to-red-500/0 opacity-60 blur-[1px] transition-all duration-500 group-hover/comment:from-cyan-500/30 group-hover/comment:to-red-500/20 group-hover/comment:scale-105" />
+      
+      <img
+        src={c.avatar_url || '/avatar-placeholder.png'}
+        alt=""
+        className="relative h-full w-full rounded-lg border border-zinc-800 bg-zinc-900 object-cover p-[2px] transition-all duration-500 group-hover/comment:border-cyan-400/60 group-hover/comment:scale-[0.98]"
+      />
+      
+      {/* Target Lock Matrix Overlay */}
+      <div className="absolute inset-0 rounded-lg border border-transparent transition-all duration-300 group-hover/comment:border-cyan-400/20 group-hover/comment:bg-cyan-500/5" />
+    </div>
+
+    {/* Central Processing Core (Content Section) */}
+    <div className="flex-1 min-w-0">
+      {/* Header Array */}
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* Identity Matrix String */}
+          <span className="truncate text-xs font-black tracking-wider text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all duration-300 group-hover/comment:text-white group-hover/comment:drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
+            {c.username}
+          </span>
+          
+          {/* Node Link Identity Metric */}
+<span className="font-mono text-[9px] font-medium tracking-normal text-zinc-600 transition-colors duration-300 group-hover/comment:text-zinc-500">
+  @{c.username?.replace(/\s+/g, '').toLowerCase()}
+</span>
+        </div>
+
+        {/* System Node Index String */}
+        <span className="font-mono text-[8px] tracking-widest text-zinc-700 transition-colors duration-300 group-hover/comment:text-cyan-500/40">
+          NODE://{c.id?.toString().slice(0, 4) || 'AUTH'}
+        </span>
       </div>
+
+      {/* Main Signal Display (Comment Payload) */}
+      <p className="mt-2 text-sm leading-relaxed tracking-wide text-zinc-300 transition-colors duration-300 [text-shadow:0_1px_1px_rgba(0,0,0,0.8)] group-hover/comment:text-zinc-100">
+        {c.content}
+      </p>
+
+      {/* Embedded Telemetry Metrics Bar */}
+      <div className="mt-3 flex items-center gap-3 font-mono text-[8px] tracking-widest text-zinc-600 transition-colors duration-300 group-hover/comment:text-zinc-500">
+        <span className="flex items-center gap-1">
+          <span className="h-1 w-1 rounded-full bg-emerald-500/60 group-hover/comment:animate-pulse" />
+          SECURE_CONN
+        </span>
+        <span>•</span>
+        <span>BRG_v8.4</span>
+      </div>
+    </div>
+  </div>
+))}
+
+    </div>
+  </>
+)}
+
+
+
+
       </div>
 </div>
   )
