@@ -17,18 +17,198 @@ export default function TopNav({
   const router = useRouter()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#060608]/95 backdrop-blur-xl border-b border-zinc-800">
+    <header
+  className="
+    fixed
+    top-0
+    left-0
+    right-0
+    z-50
+    bg-black/90
+    backdrop-blur-xl
+    border-b
+    border-cyan-500/20
+  "
+>
       <div className="max-w-5xl mx-auto h-16 px-6 flex items-center justify-between">
 
         {/* LOGO */}
-        <h1
-          onClick={() => router.push('/')}
-          className="text-2xl font-black cursor-pointer select-none tracking-wide"
-        >
-          <span className="text-red-500">C</span>
-          <span className="text-emerald-400">W</span>
-          <span className="text-red-500">V</span>
-        </h1>
+{/* LOGO */}
+<div
+  onClick={() => router.push('/')}
+  className="
+    group
+    relative
+    cursor-pointer
+    select-none
+    transition-all
+    duration-500
+    hover:scale-105
+    active:scale-95
+  "
+>
+  {/* Ambient Glow */}
+  <div
+    className="
+      absolute
+      -inset-6
+      rounded-full
+      bg-cyan-500/20
+      blur-2xl
+      transition-all
+      duration-500
+      group-hover:bg-cyan-500/30
+      group-hover:blur-3xl
+    "
+  />
+
+  {/* Core Glow */}
+  <div
+    className="
+      absolute
+      -inset-1
+      rounded-xl
+      bg-gradient-to-r
+      from-red-500/30
+      via-cyan-500/30
+      to-red-500/30
+      opacity-0
+      blur-md
+      transition-opacity
+      duration-500
+      group-hover:opacity-100
+    "
+  />
+
+  {/* Scan Line */}
+  <div
+    className="
+      absolute
+      top-0
+      left-0
+      h-[2px]
+      w-full
+      opacity-0
+      group-hover:opacity-100
+      transition-all
+      duration-500
+      bg-gradient-to-r
+      from-transparent
+      via-cyan-400
+      to-transparent
+    "
+  />
+
+  {/* Main Container */}
+  <div
+    className="
+      relative
+      px-4
+      py-2
+      md:px-6
+      md:py-3
+      rounded-xl
+      border
+      border-white/5
+      bg-black/40
+      backdrop-blur-xl
+      shadow-[inset_0_0_12px_rgba(34,211,238,0.05)]
+      transition-all
+      duration-500
+      group-hover:border-cyan-500/30
+      group-hover:shadow-[inset_0_0_20px_rgba(34,211,238,0.15)]
+    "
+  >
+
+    {/* Top Left Corner */}
+    <div
+      className="
+        absolute
+        top-0
+        left-0
+        h-2
+        w-2
+        border-t-2
+        border-l-2
+        border-cyan-400/40
+        group-hover:border-cyan-400
+      "
+    />
+
+    {/* Bottom Right Corner */}
+    <div
+      className="
+        absolute
+        bottom-0
+        right-0
+        h-2
+        w-2
+        border-b-2
+        border-r-2
+        border-red-500/40
+        group-hover:border-red-500
+      "
+    />
+
+    {/* Logo */}
+    <h1
+      className="
+        relative
+        text-3xl
+        md:text-5xl
+        font-black
+        tracking-widest
+        text-center
+        transition-all
+        duration-500
+        group-hover:tracking-[0.25em]
+      "
+    >
+      <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.7)]">
+        C
+      </span>
+
+      <span className="mx-1 text-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.8)]">
+        W
+      </span>
+
+      <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.7)]">
+        V
+      </span>
+    </h1>
+
+    {/* System Text */}
+    <div
+      className="
+        hidden
+        md:flex
+        mt-1
+        items-center
+        justify-between
+        text-[8px]
+        font-mono
+        tracking-[0.3em]
+        text-cyan-400/40
+        group-hover:text-cyan-400/80
+      "
+    >
+      <span>SYS.OP</span>
+
+      <span
+        className="
+          h-1
+          w-1
+          rounded-full
+          bg-red-500
+          animate-pulse
+        "
+      />
+
+      <span>V.4.02</span>
+    </div>
+
+  </div>
+</div>
 
         {/* NAVIGATION */}
         <div className="flex items-center gap-6">
