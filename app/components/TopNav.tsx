@@ -168,57 +168,51 @@ export default function TopNav({
         C
       </span>
 
-<span className="group relative mx-4 inline-block font-black select-none tracking-tighter transition-all duration-75 ease-out hover:scale-125 hover:rotate-[1deg]">
+<span className="group relative mx-4 inline-block font-black select-none tracking-tighter transition-all duration-500 ease-out hover:scale-110">
   
-  {/* Layer 1: The Event Horizon (Deep Sub-Atomic Gravitational Glow) */}
-  <span className="absolute inset-0 select-none text-blue-900/80 blur-3xl mix-blend-color-dodge scale-150 transform transition-transform duration-700 group-hover:scale-[2.5]" />
+  {/* Layer 1: Dark Matter Aura (Near Invisible Void Glow) */}
+  <span className="absolute inset-0 select-none text-blue-950/20 blur-2xl mix-blend-color-dodge transition-all duration-700 group-hover:text-blue-500/40 group-hover:scale-150" />
 
-  {/* Layer 2: Cyberpunk Glitch Shadow (Left Red Channel Bleed) */}
-  <span className="absolute inset-0 -translate-x-[4px] select-none text-red-500 opacity-60 blur-[1px] mix-blend-screen transition-transform duration-300 group-hover:-translate-x-[8px] group-hover:skew-x-12">
+  {/* Layer 2: Dormant Glitch Channels (Awakens Only on Hover) */}
+  <span className="absolute inset-0 -translate-x-[2px] select-none text-red-500/0 opacity-0 blur-[1px] mix-blend-screen transition-all duration-300 group-hover:text-red-500/40 group-hover:opacity-100 group-hover:-translate-x-[4px]">
+    W
+  </span>
+  <span className="absolute inset-0 translate-x-[2px] select-none text-emerald-500/0 opacity-0 blur-[2px] mix-blend-screen transition-all duration-300 group-hover:text-emerald-400/30 group-hover:opacity-100 group-hover:translate-x-[3px]">
     W
   </span>
 
-  {/* Layer 3: Matrix Distortion (Right Emerald Channel Bleed) */}
-  <span className="absolute inset-0 translate-x-[4px] select-none text-emerald-400 opacity-40 blur-[2px] mix-blend-screen transition-transform duration-300 group-hover:translate-x-[6px] group-hover:-skew-x-12">
+  {/* Layer 3: Neon Core Flare (Ignites on Hover) */}
+  <span className="absolute inset-0 select-none text-cyan-500/0 blur-xl mix-blend-screen transition-all duration-500 group-hover:text-blue-500/80 group-hover:blur-xl drop-shadow-[0_0_30px_rgba(59,130,246,0.6)]">
     W
   </span>
 
-  {/* Layer 4: Plasma Ignition (Vibrant Blue Photon Field) */}
-  <span className="absolute inset-0 select-none text-blue-500 blur-xl mix-blend-screen drop-shadow-[0_0_40px_rgba(59,130,246,1)] transition-all duration-500 group-hover:blur-2xl group-hover:scale-110">
-    W
-  </span>
-
-  {/* Layer 5: High-Frequency Energy Arcs (Sharp Neon Light Core) */}
-  <span className="absolute inset-0 select-none text-cyan-300 blur-[3px] opacity-90 mix-blend-color-dodge transition-all duration-300 group-hover:scale-105 group-hover:text-white">
-    W
-  </span>
-
-  {/* Layer 6: Future Chrome Vector Outer Outline */}
+  {/* Layer 4: Sleek Cyber-Outline (Subtle Tech Grid Definiton) */}
   <span 
-    className="absolute inset-0 select-none bg-gradient-to-b from-white via-cyan-300 to-blue-600 bg-clip-text text-transparent opacity-40 transition-all duration-500 group-hover:scale-105"
-    style={{ WebkitTextStroke: '2px rgba(255,255,255,0.6)' }}
+    className="absolute inset-0 select-none text-transparent opacity-10 transition-all duration-500 group-hover:opacity-60"
+    style={{ WebkitTextStroke: '1px rgba(255,255,255,0.4)' }}
   >
     W
   </span>
 
-  {/* Layer 7: The Master Liquid Core (Premium Gradient & Light Trap) */}
+  {/* Layer 5: The Master Obsidian Core (Dimly Lit Steel-to-Navy Gradient) */}
   <span className="
     relative
     block
     bg-gradient-to-b
-    from-white
-    via-blue-100
-    to-blue-900
+    from-zinc-400
+    via-slate-500
+    to-zinc-800
     bg-clip-text
     text-transparent
-    drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]
-    [text-shadow:0_0_60px_rgba(37,99,235,0.6),_0_0_20px_rgba(6,182,212,0.8)]
+    opacity-60
+    transition-all
+    duration-500
+    group-hover:from-white
+    group-hover:via-cyan-100
+    group-hover:to-blue-700
+    group-hover:opacity-100
+    group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]
   ">
-    W
-  </span>
-
-  {/* Layer 8: Specular Lens Flare Overlay */}
-  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent bg-clip-text text-transparent opacity-0 mix-blend-overlay transition-opacity duration-300 group-hover:opacity-100 group-hover:animate-pulse">
     W
   </span>
 </span>
