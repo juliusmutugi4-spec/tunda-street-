@@ -168,42 +168,57 @@ export default function TopNav({
         C
       </span>
 
-<span className="group relative mx-2 inline-block font-black select-none transition-all duration-700 hover:scale-110">
-  {/* Layer 1: Hyper-Space Reality Tear (Deep Neon Silhouette Aura) */}
-  <span className="absolute inset-0 translate-x-[2px] translate-y-[2px] select-none text-red-500/40 blur-[4px] filter transition-transform duration-500 group-hover:translate-x-[4px] group-hover:translate-y-[4px]">
+<span className="group relative mx-4 inline-block font-black select-none tracking-tighter transition-all duration-75 ease-out hover:scale-125 hover:rotate-[1deg]">
+  
+  {/* Layer 1: The Event Horizon (Deep Sub-Atomic Gravitational Glow) */}
+  <span className="absolute inset-0 select-none text-blue-900/80 blur-3xl mix-blend-color-dodge scale-150 transform transition-transform duration-700 group-hover:scale-[2.5]" />
+
+  {/* Layer 2: Cyberpunk Glitch Shadow (Left Red Channel Bleed) */}
+  <span className="absolute inset-0 -translate-x-[4px] select-none text-red-500 opacity-60 blur-[1px] mix-blend-screen transition-transform duration-300 group-hover:-translate-x-[8px] group-hover:skew-x-12">
     W
   </span>
 
-  {/* Layer 2: Quantum Distortion Glow (Deep Blue Volumetric Under-glow) */}
-  <span className="absolute inset-0 select-none text-blue-600 blur-xl filter opacity-90 mix-blend-screen drop-shadow-[0_0_35px_rgba(37,99,235,1)] animate-pulse">
+  {/* Layer 3: Matrix Distortion (Right Emerald Channel Bleed) */}
+  <span className="absolute inset-0 translate-x-[4px] select-none text-emerald-400 opacity-40 blur-[2px] mix-blend-screen transition-transform duration-300 group-hover:translate-x-[6px] group-hover:-skew-x-12">
     W
   </span>
 
-  {/* Layer 3: Plasma Shield (Sharp Cyan Neon Core Silhouette) */}
-  <span className="absolute inset-0 select-none text-cyan-400 blur-[2px] filter opacity-80 mix-blend-color-dodge group-hover:animate-ping">
+  {/* Layer 4: Plasma Ignition (Vibrant Blue Photon Field) */}
+  <span className="absolute inset-0 select-none text-blue-500 blur-xl mix-blend-screen drop-shadow-[0_0_40px_rgba(59,130,246,1)] transition-all duration-500 group-hover:blur-2xl group-hover:scale-110">
     W
   </span>
 
-  {/* Layer 4: The Physical Hologram (Your Original Gradient, Perfected) */}
+  {/* Layer 5: High-Frequency Energy Arcs (Sharp Neon Light Core) */}
+  <span className="absolute inset-0 select-none text-cyan-300 blur-[3px] opacity-90 mix-blend-color-dodge transition-all duration-300 group-hover:scale-105 group-hover:text-white">
+    W
+  </span>
+
+  {/* Layer 6: Future Chrome Vector Outer Outline */}
+  <span 
+    className="absolute inset-0 select-none bg-gradient-to-b from-white via-cyan-300 to-blue-600 bg-clip-text text-transparent opacity-40 transition-all duration-500 group-hover:scale-105"
+    style={{ WebkitTextStroke: '2px rgba(255,255,255,0.6)' }}
+  >
+    W
+  </span>
+
+  {/* Layer 7: The Master Liquid Core (Premium Gradient & Light Trap) */}
   <span className="
     relative
     block
     bg-gradient-to-b
     from-white
-    via-cyan-200
-    to-blue-600
+    via-blue-100
+    to-blue-900
     bg-clip-text
     text-transparent
-    font-black
-    tracking-tighter
-    drop-shadow-[0_0_15px_rgba(56,189,248,0.6)]
-    [text-shadow:0_0_50px_rgba(37,99,235,0.5)]
+    drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]
+    [text-shadow:0_0_60px_rgba(37,99,235,0.6),_0_0_20px_rgba(6,182,212,0.8)]
   ">
     W
   </span>
 
-  {/* Layer 5: Chrome Light Flare Reflection (Simulated Liquid Metal Specular Highlight) */}
-  <span className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/80 to-transparent bg-clip-text text-transparent opacity-0 mix-blend-overlay transition-opacity duration-500 group-hover:opacity-100">
+  {/* Layer 8: Specular Lens Flare Overlay */}
+  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent bg-clip-text text-transparent opacity-0 mix-blend-overlay transition-opacity duration-300 group-hover:opacity-100 group-hover:animate-pulse">
     W
   </span>
 </span>
