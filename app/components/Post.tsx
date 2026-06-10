@@ -16,10 +16,13 @@ post: {
     avatar_url?: string | null
   }
   user: any
-  profile?: { // <- add this
-    username?: string
-    avatar_url?: string | null
-  } | null
+profile?: {
+  username?: string
+  avatar_url?: string | null
+  reputation?: number
+  predictions_correct?: number
+  predictions_wrong?: number
+} | null
 }
 
 export default function Post({
@@ -180,10 +183,36 @@ if (error) {
           >
             {username}
           </button>
+
+<div className="flex items-center gap-4 mt-2 font-mono text-[10px] tracking-wider uppercase text-slate-400">
+  {/* Reputation / Power Level */}
+  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-yellow-500/20 bg-yellow-500/5 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+    <span className="animate-pulse text-[8px]">⚡</span>
+    <span>REP // {profile?.reputation || 0}</span>
+  </div>
+
+  {/* Correct Predictions / Accuracy Matrix */}
+  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+    <span>HIT // {profile?.predictions_correct || 0}</span>
+  </div>
+
+  {/* Wrong Predictions / System Faults */}
+  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-red-500/20 bg-red-500/5 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+    <span className="text-[8px] font-bold">✕</span>
+    <span>MISS // {profile?.predictions_wrong || 0}</span>
+  </div>
+</div>
+
+          
           <p className="text-xs text-zinc-500">
             {new Date(post.created_at).toLocaleString()}
           </p>
         </div>
+
+
+
+
       </div>
 
       {/* Content */}

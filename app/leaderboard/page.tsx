@@ -89,7 +89,7 @@ const accuracy = (correct: number, wrong: number) => {
 }
 
   const topThree = profiles.slice(0, 3)
-  const remainingProfiles = profiles.slice(3)
+  
 
   if (isLoading) {
     return (
@@ -229,9 +229,22 @@ const cardStyles =
                     </span>
                   </div>
 <div className="flex items-center gap-2">
-  <h3 className="font-bold text-xl text-zinc-100 truncate">
-    {user.username || 'Anonymous Analyst'}
-  </h3>
+<button
+  onClick={() =>
+    window.location.href = `/profile/${user.username}`
+  }
+  className="
+    font-bold
+    text-xl
+    text-zinc-100
+    truncate
+    hover:text-cyan-400
+    transition-colors
+    text-left
+  "
+>
+  {user.username || 'Anonymous Analyst'}
+</button>
 
   {accuracy(
     user.predictions_correct || 0,
@@ -277,15 +290,27 @@ const cardStyles =
   </div>
 
   <div className="mt-2 h-1.5 rounded-full bg-zinc-900 overflow-hidden">
-    <div
-      className="h-full rounded-full bg-cyan-400"
-      style={{
-        width: `${accuracy(
+<div
+  className={`h-full rounded-full ${
+    accuracy(
+      user.predictions_correct || 0,
+      user.predictions_wrong || 0
+    ) >= 80
+      ? 'bg-emerald-400'
+      : accuracy(
           user.predictions_correct || 0,
           user.predictions_wrong || 0
-        )}%`
-      }}
-    />
+        ) >= 50
+      ? 'bg-amber-400'
+      : 'bg-rose-400'
+  }`}
+  style={{
+    width: `${accuracy(
+      user.predictions_correct || 0,
+      user.predictions_wrong || 0
+    )}%`
+  }}
+/>
   </div>
 </div>
                 </div>
@@ -322,13 +347,35 @@ const cardStyles =
 
                   {/* Identity Row Node */}
                   <div className="col-span-1 md:col-span-5 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-400 uppercase">
-                      {profile.username?.slice(0, 2) || 'AN'}
-                    </div>
+<img
+  src={profile.avatar_url || '/avatar-placeholder.png'}
+  alt={profile.username}
+  className="
+    w-8 h-8
+    rounded-lg
+    object-cover
+    border
+    border-zinc-800
+    bg-zinc-900
+  "
+/>
                     <div className="flex flex-col min-w-0">
-                      <span className="font-medium text-sm text-zinc-200 truncate">
-                        {profile.username || 'Anonymous Participant'}
-                      </span>
+<button
+  onClick={() =>
+    window.location.href = `/profile/${profile.username}`
+  }
+  className="
+    font-medium
+    text-sm
+    text-zinc-200
+    truncate
+    hover:text-cyan-400
+    transition-colors
+    text-left
+  "
+>
+  {profile.username || 'Anonymous Participant'}
+</button>
                     </div>
                   </div>
 

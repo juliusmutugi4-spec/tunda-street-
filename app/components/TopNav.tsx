@@ -271,6 +271,20 @@ export default function TopNav({
           >
             Videos
           </button>
+ 
+
+<button
+  onClick={() => router.push('/leaderboard')}
+  className="
+    text-sm
+    font-semibold
+    text-zinc-300
+    hover:text-cyan-400
+    transition
+  "
+>
+  🏆 Leaderboard
+</button>
 
           {user ? (
             <>
