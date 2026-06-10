@@ -217,11 +217,7 @@ const resolvePrediction = async (
   status: 'correct' | 'wrong',
   creatorId: string
 ) => {
-alert('BUTTON WORKS')
-alert(creatorId)
-alert('AFTER CREATOR ID')
 
-alert('BEFORE UPDATE')
   // Update prediction status
 const { data, error: predictionError } = await supabase
   .from('predictions')
