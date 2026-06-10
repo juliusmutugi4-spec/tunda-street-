@@ -56,8 +56,14 @@ const [voteCounts, setVoteCounts] = useState<any>({})
 
       if (session?.user) {
         const { data } = await supabase
-          .from('profiles')
-          .select('username, avatar_url')
+.from('profiles')
+.select(`
+  username,
+  avatar_url,
+  reputation,
+  predictions_correct,
+  predictions_wrong
+`)
           .eq('id', session.user.id)
           .single()
 
@@ -80,12 +86,18 @@ fetchVoteCounts()
         if (session?.user) {
           const { data } = await supabase
             .from('profiles')
-            .select('username, avatar_url')
+            .select(`
+  username,
+  avatar_url,
+  reputation,
+  predictions_correct,
+  predictions_wrong
+`)
             .eq('id', session.user.id)
             .single()
 
           setProfile(data)
-
+console.log('PROFILE DATA:', data)
           // ✅ update unread messages on login
           await fetchUnreadMessages(session.user.id)
         } else {
@@ -199,6 +211,65 @@ const fetchVoteCounts = async () => {
     setUser(null)
     setUnreadCount(0)
   }
+
+const resolvePrediction = async (
+  predictionId: string,
+  status: 'correct' | 'wrong',
+  creatorId: string
+) => {
+alert('BUTTON WORKS')
+alert(creatorId)
+alert('AFTER CREATOR ID')
+
+alert('BEFORE UPDATE')
+  // Update prediction status
+const { data, error: predictionError } = await supabase
+  .from('predictions')
+  .update({ status })
+  .eq('id', predictionId)
+  .select()
+
+
+  // Get creator profile
+const { data: profileData, error: profileError } = await supabase
+  .from('profiles')
+  .select('reputation, predictions_correct, predictions_wrong')
+  .eq('id', creatorId)
+  .single()
+
+
+  if (!profileData) return
+
+  if (status === 'correct') {
+    alert('ENTERED CORRECT BLOCK')
+    await supabase
+      .from('profiles')
+      .update({
+        reputation: (profileData.reputation || 0) + 10,
+        predictions_correct:
+          (profileData.predictions_correct || 0) + 1,
+      })
+      .eq('id', creatorId)
+  }
+
+  if (status === 'wrong') {
+const { data: updateData, error: updateError } = await supabase
+  .from('profiles')
+  .update({
+    reputation: (profileData.reputation || 0) + 10,
+    predictions_correct:
+      (profileData.predictions_correct || 0) + 1,
+  })
+  .eq('id', creatorId)
+  .select()
+
+
+  }
+
+  fetchPredictions()
+}
+
+
 
   return (
     <main className="min-h-screen bg-[#060608] text-[#f4f4f5] antialiased selection:bg-emerald-500/30 font-sans tracking-tight relative overflow-x-hidden">
@@ -343,6 +414,46 @@ const fetchVoteCounts = async () => {
     👎 {voteCounts[prediction.id]?.disagree || 0}
   </button>
 </div>
+
+
+<div className="mt-4 flex items-center gap-3">
+  {/* Mark Correct Button */}
+  <button
+    type="button"
+    onClick={() =>
+      resolvePrediction(
+        prediction.id,
+        'correct',
+        prediction.user_id
+      )
+    }
+    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-100 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 active:scale-[0.98]"
+  >
+    <svg className="h-3.5 w-3.5 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+    Mark Correct
+  </button>
+
+  {/* Mark Wrong Button */}
+  <button
+    type="button"
+    onClick={() =>
+      resolvePrediction(
+        prediction.id,
+        'wrong',
+        prediction.user_id
+      )
+    }
+    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-1.5 text-xs font-semibold text-red-700 transition-all duration-200 hover:bg-red-100 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 active:scale-[0.98]"
+  >
+    <svg className="h-3.5 w-3.5 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    Mark Wrong
+  </button>
+</div>
+
   </div>
 ))}
 
