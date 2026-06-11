@@ -14,6 +14,7 @@ const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [profile, setProfile] = useState<any>(null)
   const [posts, setPosts] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
 const [editing, setEditing] = useState(false)
 const [newUsername, setNewUsername] = useState('')
@@ -179,6 +180,29 @@ const saveProfile = async () => {
   router.replace(`/profile/${username}`)
 }
 
+const toggleFollow = async () => {
+  if (!currentUser || !profile) return
+
+  if (isFollowing) {
+    await supabase
+      .from('followers')
+      .delete()
+      .eq('follower_id', currentUser.id)
+      .eq('following_id', profile.id)
+
+    setIsFollowing(false)
+  } else {
+    await supabase
+      .from('followers')
+      .insert({
+        follower_id: currentUser.id,
+        following_id: profile.id,
+      })
+
+    setIsFollowing(true)
+  }
+}
+
 
   return (
     <main className="min-h-screen bg-[#060608] text-white">
@@ -209,6 +233,31 @@ const saveProfile = async () => {
                   <h1 className="text-4xl font-black tracking-tight">
                     {profile.username}
                   </h1>
+
+
+{currentUser?.id !== profile.id && (
+  <button
+onClick={toggleFollow}
+    className="
+      mt-3
+      px-4
+      py-2
+      rounded-lg
+      border
+      border-cyan-500/20
+      bg-cyan-500/5
+      text-cyan-400
+      text-sm
+      font-semibold
+      hover:bg-cyan-500/10
+      transition
+    "
+  >
+    {isFollowing ? 'Following' : 'Follow'}
+  </button>
+)}
+
+
 
 {currentUser?.id !== profile.id && (
   <button

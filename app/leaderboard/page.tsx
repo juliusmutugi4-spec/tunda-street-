@@ -34,9 +34,15 @@ export default function LeaderboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  useEffect(() => {
+useEffect(() => {
+  fetchLeaderboard()
+
+  const interval = setInterval(() => {
     fetchLeaderboard()
-  }, [])
+  }, 10000)
+
+  return () => clearInterval(interval)
+}, [])
 
   const fetchLeaderboard = async () => {
     try {
