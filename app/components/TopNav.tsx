@@ -1,7 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Bell } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Bell,
+  Menu,
+  Trophy,
+  Settings,
+  LogOut
+} from 'lucide-react'
 
 type TopNavProps = {
   user: any
@@ -15,7 +22,7 @@ export default function TopNav({
   onLogout,
 }: TopNavProps) {
   const router = useRouter()
-
+const [menuOpen, setMenuOpen] = useState(false)
   return (
     <header
   className="
@@ -150,78 +157,13 @@ export default function TopNav({
       "
     />
 
-    {/* Logo */}
-    <h1
-      className="
-        relative
-        text-3xl
-        md:text-5xl
-        font-black
-        tracking-widest
-        text-center
-        transition-all
-        duration-500
-        group-hover:tracking-[0.25em]
-      "
-    >
-      <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.7)]">
-        C
-      </span>
-
-<span className="group relative mx-4 inline-block font-black select-none tracking-tighter transition-all duration-500 ease-out hover:scale-110">
-  
-  {/* Layer 1: Dark Matter Aura (Near Invisible Void Glow) */}
-  <span className="absolute inset-0 select-none text-blue-950/20 blur-2xl mix-blend-color-dodge transition-all duration-700 group-hover:text-blue-500/40 group-hover:scale-150" />
-
-  {/* Layer 2: Dormant Glitch Channels (Awakens Only on Hover) */}
-  <span className="absolute inset-0 -translate-x-[2px] select-none text-red-500/0 opacity-0 blur-[1px] mix-blend-screen transition-all duration-300 group-hover:text-red-500/40 group-hover:opacity-100 group-hover:-translate-x-[4px]">
-    W
+<h1 className="text-xl md:text-2xl font-light tracking-[0.25em] text-white uppercase transition-all duration-500">
+  Street
+  <span className="ml-1 font-semibold text-emerald-400 border-b border-emerald-500/40 pb-1">
+    Go
   </span>
-  <span className="absolute inset-0 translate-x-[2px] select-none text-emerald-500/0 opacity-0 blur-[2px] mix-blend-screen transition-all duration-300 group-hover:text-emerald-400/30 group-hover:opacity-100 group-hover:translate-x-[3px]">
-    W
-  </span>
+</h1>
 
-  {/* Layer 3: Neon Core Flare (Ignites on Hover) */}
-  <span className="absolute inset-0 select-none text-cyan-500/0 blur-xl mix-blend-screen transition-all duration-500 group-hover:text-blue-500/80 group-hover:blur-xl drop-shadow-[0_0_30px_rgba(59,130,246,0.6)]">
-    W
-  </span>
-
-  {/* Layer 4: Sleek Cyber-Outline (Subtle Tech Grid Definiton) */}
-  <span 
-    className="absolute inset-0 select-none text-transparent opacity-10 transition-all duration-500 group-hover:opacity-60"
-    style={{ WebkitTextStroke: '1px rgba(255,255,255,0.4)' }}
-  >
-    W
-  </span>
-
-  {/* Layer 5: The Master Obsidian Core (Dimly Lit Steel-to-Navy Gradient) */}
-  <span className="
-    relative
-    block
-    bg-gradient-to-b
-    from-zinc-400
-    via-slate-500
-    to-zinc-800
-    bg-clip-text
-    text-transparent
-    opacity-60
-    transition-all
-    duration-500
-    group-hover:from-white
-    group-hover:via-cyan-100
-    group-hover:to-blue-700
-    group-hover:opacity-100
-    group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]
-  ">
-    W
-  </span>
-</span>
-
-
-      <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.7)]">
-        V
-      </span>
-    </h1>
 
     {/* System Text */}
     <div
@@ -273,73 +215,156 @@ export default function TopNav({
           </button>
  
 
+{user ? (
+  <button
+    onClick={() => router.push('/notifications')}
+    className="
+      text-zinc-300
+      hover:text-cyan-400
+      transition
+    "
+  >
+    <Bell size={22} />
+  </button>
+) : (
+  <button
+    onClick={onLogin}
+    className="
+      px-4
+      py-2
+      rounded-xl
+      border
+      border-cyan-500/20
+      bg-cyan-500/5
+      text-cyan-400
+      font-semibold
+      hover:bg-cyan-500/10
+      transition
+    "
+  >
+    Sign In
+  </button>
+)}
+
+<div className="relative">
+
+  <button
+    onClick={() => setMenuOpen(!menuOpen)}
+    className="
+      flex
+      items-center
+      justify-center
+      w-10
+      h-10
+      rounded-xl
+      border
+      border-cyan-500/20
+      bg-cyan-500/5
+      text-cyan-400
+      hover:bg-cyan-500/10
+      transition
+    "
+  >
+    {menuOpen ? '✕' : <Menu size={20} />}
+  </button>
+
+  {menuOpen && (
+    <div
+      className="
+        absolute
+        top-12
+        right-0
+        w-56
+        rounded-2xl
+        border
+        border-cyan-500/20
+        bg-black/95
+        backdrop-blur-xl
+        overflow-hidden
+        shadow-[0_0_30px_rgba(0,255,255,0.15)]
+      "
+    >
+
+      <button
+        onClick={() => router.push('/leaderboard')}
+        className="
+          w-full
+          px-4
+          py-3
+          flex
+          items-center
+          gap-3
+          text-left
+          hover:bg-cyan-500/10
+          transition
+        "
+      >
+        <Trophy size={18} />
+        Leaderboard
+      </button>
+
+      <button
+        onClick={() => router.push('/settings')}
+        className="
+          w-full
+          px-4
+          py-3
+          flex
+          items-center
+          gap-3
+          text-left
+          hover:bg-cyan-500/10
+          transition
+        "
+      >
+        <Settings size={18} />
+        Settings
+      </button>
+
+      <button
+        onClick={() => router.push('/predictions')}
+        className="
+          w-full
+          px-4
+          py-3
+          flex
+          items-center
+          gap-3
+          text-left
+          hover:bg-cyan-500/10
+          transition
+        "
+      >
+        📊 Predictions
+      </button>
+
+<div className="h-px bg-cyan-500/10 mx-3" />
+
 <button
-  onClick={() => router.push('/leaderboard')}
+  onClick={onLogout}
   className="
-    text-sm
-    font-semibold
-    text-zinc-300
-    hover:text-cyan-400
+    w-full
+    px-4
+    py-3
+    flex
+    items-center
+    gap-3
+    text-left
+    text-red-400
+    hover:bg-red-500/10
     transition
   "
 >
-  🏆 Leaderboard
+  <LogOut size={18} />
+  Logout
 </button>
 
-          {user ? (
-            <>
-              <button
-                onClick={() =>
-                  router.push('/notifications')
-                }
-                className="
-                  text-zinc-300
-                  hover:text-white
-                  transition
-                "
-              >
-                <Bell size={22} />
-              </button>
+    </div>
+  )}
 
-              <button
-                onClick={onLogout}
-                className="
-                  px-3
-                  py-1.5
-                  text-xs
-                  font-bold
-                  text-red-400
-                  border
-                  border-zinc-700
-                  rounded-lg
-                  hover:bg-red-900/20
-                  transition
-                "
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onLogin}
-              className="
-                px-4
-                py-2
-                text-sm
-                font-bold
-                text-white
-                rounded-lg
-                bg-gradient-to-r
-                from-red-600
-                to-red-700
-                hover:from-red-500
-                hover:to-red-600
-                transition
-              "
-            >
-              Login
-            </button>
-          )}
+</div>
+
+
 
         </div>
       </div>

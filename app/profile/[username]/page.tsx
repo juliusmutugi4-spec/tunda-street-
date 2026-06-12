@@ -249,6 +249,20 @@ const toggleFollow = async () => {
         following_id: profile.id,
       })
 
+if (!error) {
+  const { error: notificationError } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: profile.id,
+      actor_id: currentUser.id,
+      type: 'follow',
+      message: `${currentUser.email || 'Someone'} followed you`,
+    })
+
+  console.log('NOTIFICATION ERROR:', notificationError)
+}
+
+
     if (error) {
       alert(error.message)
       return
@@ -583,9 +597,17 @@ onClick={toggleFollow}
               className="w-10 h-10 rounded-xl object-cover"
             />
 
-            <span className="font-semibold">
-              {follower.profiles?.username}
-            </span>
+<button
+  onClick={() => {
+    setShowFollowers(false)
+    router.push(
+      `/profile/${follower.profiles?.username}`
+    )
+  }}
+  className="font-semibold hover:text-cyan-400 transition"
+>
+  {follower.profiles?.username}
+</button>
           </div>
         ))}
 
