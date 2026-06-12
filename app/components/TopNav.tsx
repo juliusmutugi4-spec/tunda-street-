@@ -157,9 +157,12 @@ const [menuOpen, setMenuOpen] = useState(false)
       "
     />
 
-<h1 className="text-left text-2xl md:text-3xl font-bold tracking-normal text-slate-100 transition-colors duration-300">
-  STREET<span className="font-black text-emerald-400">GO</span>
-</h1>
+<div className="w-full flex justify-start p-0 m-0">
+  <h1 className="text-left p-0 m-0 text-2xl md:text-3xl font-bold tracking-tight text-slate-100 transition-colors duration-300">
+    STREET<span className="font-black text-emerald-400">GO</span>
+  </h1>
+</div>
+
 
 
 
